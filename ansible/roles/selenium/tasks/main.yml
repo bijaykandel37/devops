@@ -1,0 +1,65 @@
+---
+## The commented part is for selenium in standalone mode
+
+# - name: Re-create a Selenium container
+#   docker_container:
+#     name: selenium
+#     image: "{{selenium.docker.image}}:{{selenium.docker.version}}"
+#     state: started
+#     recreate: yes
+#     ports:
+#       - "4444:4444"
+#     labels:
+#         traefik.http.routers.selenium.entrypoints: "websecure"
+#         traefik.enable: "true"
+#         traefik.http.routers.selenium.rule: "Host(`{{selenium.host}}`)"
+#         traefik.http.services.selenium.loadbalancer.server.port: "4444"
+#         traefik.http.routers.selenium.tls.certresolver: "tlsresolver"
+
+---
+- name: Re-create a Selenium container
+  docker_container:
+    name: selenium-hub
+    image: "{{selenium_hub.docker.image}}:{{selenium_hub.docker.version}}"
+    state: started
+    recreate: yes
+    restart_policy: "always"
+    env:
+      SE_NODE_MAX_SESSIONS: "4"
+    networks:
+      - name: traefik_network
+    labels:
+      traefik.http.routers.selenium.entrypoints: "websecure"
+      traefik.enable: "true"
+      traefik.http.routers.selenium.rule: "Host(`{{selenium_hub.host}}`)"
+      traefik.http.services.selenium.loadbalancer.server.port: "4444"
+      traefik.http.routers.selenium.tls.certresolver: "tlsresolver"
+    ulimits:
+      - nofile:32768:32768
+    shm_size: "1g"
+    security_opts:
+      - apparmor=unconfined
+
+
+- name: Create Chrome Node containers
+  docker_container:
+    name: "selenium-node-{{ item }}"
+    image: "{{ selenium_node.docker.image }}:{{ selenium_node.docker.version }}"
+    state: started
+    recreate: yes
+    restart_policy: "always"
+    env:
+      SE_EVENT_BUS_HOST: "selenium-hub"
+      SE_EVENT_BUS_PUBLISH_PORT: "4442"
+      SE_EVENT_BUS_SUBSCRIBE_PORT: "4443"
+      SE_NODE_MAX_SESSIONS: "4"
+    ulimits:
+      - nofile:32768:32768
+    networks:
+      - name: traefik_network
+    shm_size: "1g"
+    security_opts:
+      - apparmor=unconfined
+  with_sequence: count=4
+
+

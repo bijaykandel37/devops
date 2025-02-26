@@ -1,0 +1,35 @@
+filebeat.inputs:
+- type: log
+  paths:
+    - /var/log/nginx/jenkins-access.log
+
+output.elasticsearch:
+  hosts: ["localhost:9200"]
+  username: "elastic"
+  password: "elasticpassword"
+setup.kibana:
+  host: "127.0.0.1:5601"
+
+# Optional settings
+filebeat.config.modules:
+  enabled: false
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat.log
+  keepfiles: 7
+  permissions: 0644
+
+setup.ilm.enabled: false
+

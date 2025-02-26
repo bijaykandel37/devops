@@ -1,0 +1,182 @@
+gtid_mode=ON
+enforce_gtid_consistency=ON
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+binlog_checksum=NONE
+log_slave_updates=ON
+log_bin=binlog
+binlog_format=ROW
+loose-group_replication_bootstrap_group=OFF
+loose-group_replication_start_on_boot=OFF
+loose-group_replication_ssl_mode=REQUIRED
+loose-group_replication_recovery_use_ssl=1
+   
+   
+After adding above in my.cnf, login to mysql cli and install a plugin for replication
+   
+INSTALL PLUGIN group_replication SONAME 'group_replication.so';    
+SHOW PLUGINS;
+    
+    
+ # Shared replication group configuration
+loose-group_replication_group_name = "bfdb88ba-b21c-4c07-84b5-8b9c1d145345"
+loose-group_replication_ip_whitelist = "10.104.0.29,10.104.0.22"
+loose-group_replication_group_seeds = "10.104.0.29:33061,10.104.0.22:33061"
+
+# Single or Multi-primary mode? Uncomment these two lines for multi-primary mode, where any host can accept writes
+loose-group_replication_single_primary_mode = OFF
+loose-group_replication_enforce_update_everywhere_checks = ON   
+   
+   
+   
+    auto-increment-increment =1
+    auto-increment-offset =1
+    log-bin-index =binlog.index
+    binlog-row-image =FULL
+    binlog-transaction-dependency-tracking =WRITESET
+    master-info-file =master.info 
+    relay-log =/app/mysql/relay
+    sync-binlog =1
+ 
+    ### SLAVE SECTION
+    skip-slave-start
+    slave-parallel-type = LOGICAL_CLOCK
+    slave-parallel-workers = 2
+    slave-preserve-commit-order = 1
+ 
+    ######################################
+    #Group Replication
+    ######################################
+    plugin_load_add  ='group_replication.so'
+    plugin-load-add ='mysql_clone.so'
+    group_replication_group_name ="<uuid>" 
+    group_replication_start_on_boot =off
+    group_replication_local_address = "10.104.0.22:33061"
+    group_replication_group_seeds = "10.104.0.22:33061,10.104.0.29:33061"
+    group_replication_bootstrap_group = off
+    transaction-write-set-extraction = XXHASH64
+
+    
+    ##Use this setting if a node is not joining the group just because the node is behind some transactions than the group itself.
+###       group_replication_allow_local_disjoint_gtids_join=ON
+  /////////  SET SQL_LOG_BIN=1;
+
+
+    ##Create a user and grant replication on primary node
+    
+    create user 'replication'@'%' identified by 'Freefall6-Fax-Litter';
+    grant replication slave on *.* to 'replication'@'%';
+    FLUSH PRIVILEGES;
+ 
+    CHANGE MASTER TO MASTER_USER='replication', MASTER_PASSWORD='Freefall6-Fax-Litter' FOR CHANNEL 'group_replication_recovery';
+    
+    SET GLOBAL group_replication_bootstrap_group=ON;
+    START GROUP_REPLICATION;
+    SET GLOBAL group_replication_bootstrap_group=OFF;
+    
+    
+    STOP GROUP_REPLICATION;
+    
+    If a secondary node is behind transactions than other node, execute the following queries in the node, we can keep this in mysql.cnf file also (not recommended) group_replication_allow_local_disjoint_gtids_join=ON
+    
+    (Instead do this:)
+        
+    set wsrep_on=0;
+    RESET MASTER;
+    set wsrep_on=1;
+    set global gtid_purged='1d6cb58a-a464-4d74-89d7-c7a468917de2:1-16,dc645b87-2658-11ee-ae58-8661673a301b:1-2';
+    START GROUP_REPLICATION;
+    
+    
+    
+    
+    And need to host entry all of the nodes in eachother's /etc/hosts file.
+    
+    
+    Check the status with query 
+    SELECT * FROM performance_schema.replication_group_members;
+    select * from sys.gr_member_routing_candidate_status;
+    
+    show global variables like 'gtid%';
+    select @@GLOBAL.gtid_executed;
+    SHOW GLOBAL STATUS LIKE 'group_replication_running';
+    
+    
+    //If ERROR 1290 (HY000): The MySQL server is running with the --super-read-only option so it cannot execute this statement is seen,
+    SET GLOBAL super_read_only = OFF;
+    
+    //for some errors RESET SLAVE; also works
+    
+    
+    
+    
+    GRANT CONNECTION_ADMIN ON *.* TO 'replication'@'%'
+    GRANT BACKUP_ADMIN ON *.* TO 'replication'@'%'
+    GRANT GROUP_REPLICATION_STREAM ON *.* TO 'replication'@'%'
+    FLUSH PRIVILEGES;
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+CHANGE MASTER TO MASTER_USER='', MASTER_PASSWORD='' FOR CHANNEL 'group_replication_recovery';
+    
+    
+CHANGE MASTER to
+master_user='replication',
+master_password='Climatic6-Rudder-Scarecrow',
+master_host='10.0.102.63',
+master_auto_position=1,
+source_connection_auto_failover=0,
+master_retry_count=6,
+master_connect_retry=10
+for channel "dc1_to_dc2";
+    
+    
+SELECT asynchronous_connection_failover_add_source('dc1_to_dc2', '10.0.102.63', 3306, null, 100);
+SELECT asynchronous_connection_failover_add_source('dc1_to_dc2', '10.0.102.64', 3306, null, 80);
+
+
+
+
+
+
+
+
+
+for recovery:
+rsync -avP --exclude=binlog.* --exclude=relay-log.* --exclude=ib_logfile* \
+--exclude='#sql*' --exclude='*.tmp' --exclude=auto.cnf --exclude=mysql.sock \
+--exclude=performance_schema/ --exclude=sys/ \
+bankfailover3:/var/lib/mysql/ /var/lib/mysql/
+
+chown -R mysql:mysql /var/lib/mysql
+
+
+
+
+SELECT table_name, table_rows 
+FROM information_schema.tables 
+WHERE table_schema = 'wf_workflow';
+
+
+
+
+
+
+    
+    
+    
+
+

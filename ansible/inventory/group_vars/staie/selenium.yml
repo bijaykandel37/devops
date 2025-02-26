@@ -1,0 +1,3 @@
+selenium_hub:
+    host: selenium-grid.mydomain.com
+    email: bijay@email.com

@@ -1,0 +1,13 @@
+; This file is generated using Ansible. Please do not edit manually.
+; The ansible playbook to regenerate this file is located at: https://git.sabhriti.eu/infrastructure/rollout/asterisk/configure
+
+{% for extension in item.extensions %}
+[{{item.name}}_{{extension.extension}}]
+exten => s,1,NoOp(Incoming call to ${EXTEN} from ${CALLERID(all)})
+same => n,Set(CALLED_PARTY_ID=${PJSIP_HEADER(read,P-Called-Party-ID)})
+same => n,CELGenUserEvent(DIALED_NUMBER,${CALLED_PARTY_ID})
+same => n,NoOp(P-Called-Party-ID: ${CALLED_PARTY_ID})
+same => n,Answer()
+same => n,Queue({{item.name}}_{{extension.external_number}})
+
+{% endfor %}

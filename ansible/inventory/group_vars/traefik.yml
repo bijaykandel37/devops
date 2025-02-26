@@ -1,0 +1,6 @@
+traefik:
+    docker:
+        image: traefik
+        version: v3.0.0
+        stack:
+            name: traefik

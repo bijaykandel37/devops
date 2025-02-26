@@ -1,0 +1,13 @@
+postgresql:
+  listen_address: 10.0.0.2
+  version: 14
+  hba_conf_path: /etc/postgresql/14/main/pg_hba.conf
+  postgresql_conf_path: /etc/postgresql/14/main/postgresql.conf
+  public_network_cidr: "10.0.0.0/16"
+  database:
+    name: occs_db_prod
+    user: occs_usr_prod
+    encoding: UTF8
+    locale: en_US.UTF-8
+
+secret_path: secret/data/occs/postgres

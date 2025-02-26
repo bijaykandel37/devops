@@ -1,0 +1,4 @@
+postgres:
+    docker:
+        image: postgres
+        version: 14.12-alpine3.20

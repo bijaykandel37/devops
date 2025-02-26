@@ -1,0 +1,38 @@
+On Master:
+
+show master status;
+
+CREATE USER 'replication'@'%' IDENTIFIED WITH mysql_native_password BY 'ForSlaveRepPw';
+GRANT REPLICATION SLAVE ON *.* TO 'replication'@'%';
+FLUSH PRIVILEGES;
+
+
+
+
+
+CHANGE MASTER TO MASTER_LOG_FILE = 'mysql-bin.000003', MASTER_LOG_POS = 1106;
+
+
+On slave;
+
+
+
+CHANGE MASTER TO
+MASTER_HOST='192.168.1.84',
+MASTER_USER='replication',
+MASTER_PASSWORD='ForSlaveRepPw',
+MASTER_LOG_FILE='mysql-bin.000003',
+MASTER_LOG_POS=753;
+
+START SLAVE;
+
+##to test queries
+create database mydatabase;
+
+use mydatabase;
+
+create table test(id int);
+
+insert into test values (1);
+
+

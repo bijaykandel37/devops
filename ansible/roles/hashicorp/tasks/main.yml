@@ -1,0 +1,64 @@
+- name: Create directory for Vault config
+  file:
+    path: /app/vault
+    state: directory
+    owner: 100
+    group: 1000
+    mode: '0755'
+
+- name: Copy Vault config.hcl to target host
+  template:
+    src: config.hcl
+    dest: /app/vault/config.hcl
+    owner: 100
+    group: 1000
+    mode: '0644'
+
+- name: Create directory for Vault TLS
+  file:
+    path: /app/vault/tls
+    state: directory
+    owner: 100
+    group: 1000
+    mode: '0755'
+
+- name: Ensure Docker volume for Vault data exists
+  docker_volume:
+    name: vault-data
+    state: present
+
+- name: Create Docker network 
+  docker_network:
+    name: "{{ vault.network }}"
+    driver: bridge
+
+- name: Deploy Vault container
+  docker_container:
+    name: vault
+    image: "{{vault.docker.image}}:{{vault.docker.version}}"
+    hostname: vault
+    # ports:
+    #   - "{{vault.docker.port}}:{{vault.docker.port}}"
+    volumes:
+      - "/app/vault/config.hcl:/vault/config/config.hcl"
+      - "/app/vault/tls:/vault/tls"
+      - "vault-data:/vault/file/"
+    networks:
+      - name: "{{vault.network}}"
+    env:
+      VAULT_ADDR: http://localhost:8200
+    capabilities:
+      - IPC_LOCK
+    command: server
+    restart_policy: always
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.vault.entrypoints: "websecure"
+      traefik.http.routers.vault.rule: "Host(`{{vault.url}}`)"
+      traefik.http.services.vault.loadbalancer.server.port: "{{vault.docker.port}}"
+      traefik.http.routers.vault.tls.certresolver: "tlsresolver"
+      traefik.http.middlewares.redirect-to-https.redirectscheme.scheme: "https"
+      traefik.http.routers.vault-http.entrypoints: "web"
+      traefik.http.routers.vault-http.rule: "Host(`{{vault.url}}`)"
+      traefik.http.routers.vault-http.middlewares: "redirect-to-https"
+

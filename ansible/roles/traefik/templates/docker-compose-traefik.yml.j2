@@ -1,0 +1,39 @@
+version: '3.7'
+
+services:
+  traefik:
+    image: "{{traefik.docker.image}}:{{traefik.docker.version}}"
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.websecure.address=:443"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik_https.rule=Host(`{{traefik.host}}`)"
+      - "traefik.http.routers.traefik_https.entrypoints=websecure"
+      - "traefik.http.routers.traefik_https.tls=true"
+      - "traefik.http.routers.traefik_https.service=api@internal"
+      - "traefik.http.routers.traefik_https.tls.certresolver=tlsresolver"
+      - "traefik.http.middlewares.api-auth.basicauth.users=admin:$$apr1$$aH0RsWJn$$9W1QSLylUOR7M6OTzSt8e1"
+      - "traefik.http.routers.traefik_https.middlewares=api-auth"
+      - "traefik.http.routers.http_traefik.rule=Host(`{{traefik.host}}`)"
+      - "traefik.http.routers.http_traefik.entrypoints=web"
+      - "traefik.http.routers.http_traefik.middlewares=https_redirect"
+      - "traefik.http.middlewares.https_redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https_redirect.redirectscheme.permanent=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "/opt/traefik/traefik.yml:/etc/traefik/traefik.yml"
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    driver: overlay
+

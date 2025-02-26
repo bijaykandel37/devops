@@ -1,0 +1,7 @@
+sonarqube:
+    docker:
+        image: sonarqube
+        version: 10.7.0-community
+        port: 9000
+        network: traefik_network
+    user_dir: /opt/sonarqube

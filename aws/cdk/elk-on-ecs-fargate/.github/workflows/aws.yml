@@ -1,0 +1,79 @@
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1                   # set this to your preferred AWS region, e.g., us-west-1
+  ECR_REPOSITORY: testpipeline           # set this to your Amazon ECR repository name
+  ECS_CLUSTER_NAME: CdkStack-ClusterEB0386A7-mrkqHrtT7ZTc # set this to your ECS cluster name
+  ELASTIC_SERVICE_NAME: CdkStack-ElasticsearchService6D631236-9u1VyUDTOl9J
+  KIBANA_SERVICE_NAME:
+  LOGSTASH_SERVICE_NAME:
+  TASK_DEFINITION: CdkStackElasticsearchTaskDef4A84C606
+jobs:
+  upload:
+    name: Build images and  Upload to ECR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push images to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build a docker container and push it to ECR.
+
+          docker build -f Dockerfile.elasticsearch -t $ECR_REGISTRY/$ECR_REPOSITORY:elastic.$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:elastic.$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:elastic.$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:elastic
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:elastic
+          echo "elasticimage=$ECR_REGISTRY/$ECR_REPOSITORY:elastic" >> $GITHUB_ENV
+
+          docker build -f Dockerfile.logstash -t $ECR_REGISTRY/$ECR_REPOSITORY:logstash.$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:logstash.$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:logstash.$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:logstash
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:logstash
+          echo "logstashimage=$ECR_REGISTRY/$ECR_REPOSITORY:logstash" >> $GITHUB_ENV
+
+          docker build -f Dockerfile.kibana -t $ECR_REGISTRY/$ECR_REPOSITORY:kibana.$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:kibana.$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:kibana.$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:kibana
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:kibana
+          echo "kibanaimage=$ECR_REGISTRY/$ECR_REPOSITORY:kibana" >> $GITHUB_ENV          
+
+
+      - name: Deploy ElasticSearch to ECS
+        run: |
+          # Update ECS service with the new task definition
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER_NAME \
+            --service $ELASTIC_SERVICE_NAME \
+            --force-new-deployment
+
+          # Get the latest revision number of the task definition
+          # LATEST_REVISION=$(aws ecs describe-task-definition --task-definition CdkStack-ElasticsearchService | jq -r '.taskDefinition.revision')
+            
+          # Update ECS service with the new task definition
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER_NAME \
+            --service $LOGSTASH_SERVICE_NAME \
+            --force-new-deployment
+
+
+

@@ -1,0 +1,26 @@
+; This file is generated using Ansible. Please do not edit manually.
+; The ansible playbook to regenerate this file is located at: https://git.sabhriti.eu/infrastructure/rollout/asterisk/configure
+
+{% for extension in item.extensions %}
+[{{item.name}}_{{extension.extension}}]
+transport = transport-udp
+rtp_keepalive = 0
+language = en
+user_eq_phone = no
+t38_udptl = no
+t38_udptl_ec = none
+fax_detect = no
+trust_id_inbound = no
+t38_udptl_nat = no
+direct_media = no
+rtp_symmetric = yes
+dtmf_mode = auto
+send_connected_line = no
+disallow=all
+allow = ulaw,alaw,gsm,g726,g722,opus,h264,mpeg4
+type = endpoint
+context = {{item.name}}_{{extension.extension}}
+aors = {{item.name}}_{{extension.extension}}
+outbound_auth = {{item.name}}_{{extension.extension}}
+
+{% endfor %}

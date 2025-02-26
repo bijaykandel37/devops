@@ -1,0 +1,5 @@
+ssl:
+  email: bijay@email.com
+  keys_directory: /etc/asterisk/keys
+  public_key_path: /etc/asterisk/keys/fullchain.pem
+  private_key_path: /etc/asterisk/keys/privkey.pem

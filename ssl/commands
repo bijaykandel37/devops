@@ -1,0 +1,57 @@
+Check Modulus
+openssl rsa -noout -modulus -in FILE.key
+openssl req -noout -modulus -in FILE.csr
+openssl x509 -noout -modulus -in FILE.crt
+
+openssl x509 -inform DER -in certificate.cer -out certificate.pem
+openssl x509 -inform PEM -in certificate.cer -out certificate.pem
+openssl pkcs7 -print_certs -in certificate.cer -out certificate.crt
+
+Examples:
+openssl pkcs7 -print_certs -in eaccount_com.cer -out eaccount.crt
+openssl pkcs7 -print_certs -in ekyc.cer -out ekyc.crt
+
+Confirm the Modulus Value Matching with Private Key and SSL/TLS certificate Key Pair
+openssl x509 -noout -modulus -in eaccount.crt
+openssl rsa -noout -modulus -in eaccount.key
+
+openssl x509 -noout -modulus -in ekyc.crt
+openssl rsa -noout -modulus -in ekyc.key
+
+Ref:
+https://www.kinamo.be/en/support/faq/useful-openssl-commands
+
+Extract .crt and .key from .pfx
+
+openssl pkcs12 -in Certificate.pfx -nocerts -out Encrypted.key
+openssl pkcs12 -in Certificate.pfx -clcerts -nokeys -out nbl.crt
+openssl rsa -in Encrypted.key -out nbl.key
+
+Convert .pfx file to. pem format
+openssl rsa -in [keyfile-encrypted.key] -outform PEM -out [keyfile-encrypted-pem.key]
+
+
+##To check dates
+openssl s_client -connect website.com:443 -servername website.com | openssl x509 -noout -dates
+
+##this command uses certificate.crt file for curl request in case of crt file mismatch
+curl https://website.com --cacert certificate.crt
+
+
+##To verify if the rootca is compatible with the ssl provided
+
+openssl x509 -in rootCA.crt -text -noout
+
+openssl verify -CAfile rootCA.crt your_ssl_certificate.crt
+
+##If this commands returns ok then OK
+
+
+##OR
+
+openssl x509 -noout -issuer -in your_ssl_certificate.crt
+openssl x509 -noout -subject -in your_ca_certificate.crt
+
+##This output must be same
+
+##Verify if the ca-bundle is placed in /etc/pki/ca-trust/source/anchors/rootCA.crt

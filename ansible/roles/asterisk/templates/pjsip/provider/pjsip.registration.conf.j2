@@ -1,0 +1,22 @@
+; This file is generated using Ansible. Please do not edit manually.
+; The ansible playbook to regenerate this file is located at: https://git.sabhriti.eu/infrastructure/rollout/asterisk/configure
+
+[{{item.name}}_default](!)
+transport=transport-udp
+retry_interval=60
+fatal_retry_interval=30
+forbidden_retry_interval=30
+max_retries=10000
+expiration=3600
+auth_rejection_permanent=no
+line=yes
+
+{% for extension in item.extensions %}
+[{{item.name}}_{{extension.extension}}]({{item.name}}_default)
+type=registration
+endpoint={{item.name}}_{{extension.extension}}
+server_uri= sip:{{item.host}}:{{item.port}}
+client_uri=sip:{{extension.username}}@{{item.host}}:{{item.port}}
+outbound_auth={{item.name}}_{{extension.extension}}
+
+{% endfor %}

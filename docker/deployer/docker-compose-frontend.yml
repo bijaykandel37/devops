@@ -1,0 +1,36 @@
+version: '3.7'
+
+services:
+  front-ui:
+    image: imagename:jenkins
+    deploy:
+      labels:
+        feature.description: 'Frontend UI'
+      placement:
+        constraints: [node.role == manager]
+    ports:
+      - 49095:3000
+    networks:
+      - portal
+
+  wordpress:
+    image: wordpress:nicblog-6.1.1
+    volumes:
+      - ./blog_wp:/var/www/html
+    environment:
+      WORDPRESS_DB_HOST: host:port
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: pwds
+      WORDPRESS_DB_NAME: dbname
+    deploy:
+      labels:
+        feature.description: 'Wordpress Blog UI'
+      placement:
+        constraints: [node.role == manager]
+    ports:
+      - 49097:80
+    networks:
+      - portal      
+
+networks:
+  portal:

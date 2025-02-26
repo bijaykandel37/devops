@@ -1,0 +1,88 @@
+---
+- name: Fetch secret from HashiCorp Vault
+  set_fact:
+    postgres_secrets: "{{ lookup('hashi_vault', secret_path, auth_method='token', token=VAULT_TOKEN, url=VAULT_ADDR) }}"
+
+- name: Install required dependencies
+  apt:
+    name:
+      - python3-psycopg2  # Install psycopg2 for Python 3
+      - postgresql-client
+    state: present
+    update_cache: yes
+
+- name: Ensure PostgreSQL APT repository is added
+  ansible.builtin.apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Add PostgreSQL APT repository
+  ansible.builtin.apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main
+    state: present
+
+- name: Update APT package index
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install PostgreSQL 14
+  ansible.builtin.apt:
+    name: "postgresql-{{ postgresql.version }}"
+    state: present
+
+- name: Ensure PostgreSQL service is started and enabled
+  ansible.builtin.service:
+    name: "postgresql@{{ postgresql.version }}-main"
+    state: started
+    enabled: yes
+
+- name: Update listen_addresses in postgresql.conf
+  ansible.builtin.lineinfile:
+    path: "{{ postgresql.postgresql_conf_path }}"
+    regexp: "^#?listen_addresses =.*"
+    line: "listen_addresses = '{{ postgresql.listen_address }}'"
+
+- name: Update pg_hba.conf to allow connections from specific CIDR
+  ansible.builtin.lineinfile:
+    path: "{{ postgresql.hba_conf_path }}"
+    insertafter: "# IPv4 local connections:"
+    line: "host    all             all             {{ postgresql.public_network_cidr }}            md5"
+
+- name: Ensure PostgreSQL user has a password
+  ansible.builtin.command: "psql -c \"ALTER USER postgres PASSWORD '{{ postgres_secrets.root_password }}';\""
+  become_user: postgres
+  args:
+    creates: /var/lib/postgresql/.psql_user_password_set
+
+- name: Restart PostgreSQL to apply pg_hba.conf change
+  ansible.builtin.service:
+    name: "postgresql"
+    state: restarted
+
+
+- name: Create PostgreSQL Database
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ postgresql.database.name }}"
+    encoding: "{{ postgresql.database.encoding }}"
+    lc_collate: "{{ postgresql.database.locale }}"
+    lc_ctype: "{{ postgresql.database.locale }}"
+    state: present
+
+- name: Create PostgreSQL User
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ postgresql.database.user }}"
+    password: "{{ postgres_secrets.postgres_password }}"
+    # priv: "{{ postgresql.database.name }}:ALL"
+    state: present
+
+- name: Grant access to the database
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    db: "{{ postgresql.database.name }}"
+    role: "{{ postgresql.database.user }}"
+    type: database
+    privs: ALL
+    state: present
+

@@ -1,0 +1,61 @@
+FROM php:8.1-fpm
+
+# Set working directory
+WORKDIR /var/www/html
+
+COPY . .
+
+COPY .env.example /var/www/html/.env
+
+# Installing Composer
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && php -r "if (hash_file('sha384', 'composer-setup.php') === 'e21205b207c3ff031906575712edab6f13eb0b361f2085f1f1237b7126d785e826a450292b6cfd1d64d92e6563bbde02') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" && php composer-setup.php && php -r "unlink('composer-setup.php');" && mv composer.phar /usr/local/bin/composer
+
+# Install php extensions
+RUN curl -sSLf \
+        -o /usr/local/bin/install-php-extensions \
+        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions && \
+    chmod +x /usr/local/bin/install-php-extensions && \
+    install-php-extensions pdo_mysql zip exif pcntl gd memcached bcmath sockets intl mysqli
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    locales \
+    zip \
+    jpegoptim optipng pngquant gifsicle \
+    unzip \
+    git \
+    curl \
+    lua-zlib-dev \
+    libmemcached-dev \
+    nginx \
+    supervisor \
+    vim \
+    ftp \
+    telnet
+
+# Clear cache
+#RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Add user for laravel application
+RUN groupadd -g 1000 www && useradd -u 1000 -ms /bin/bash -g www www && chown -R www:www-data /var/www
+
+RUN composer clear-cache
+
+RUN composer config --no-plugins allow-plugins.php-http/discovery false
+
+RUN composer install
+
+
+# Copy nginx/php configs
+RUN cp docker/php.ini /usr/local/etc/php/conf.d/app.ini && cp docker/supervisor.conf /etc/supervisord.conf && cp docker/nginx.conf /etc/nginx/sites-enabled/default && mkdir /var/log/php && touch /var/log/php/errors.log && chmod 777 /var/log/php/errors.log && chmod +x /var/www/html/docker/run.sh && chown -R www-data:www-data storage && chown -R www-data:www-data public/thumbnail && chown -R www-data:www-data public/uploads
+
+
+EXPOSE 80
+
+#CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/var/www/html/docker/run.sh"]
+

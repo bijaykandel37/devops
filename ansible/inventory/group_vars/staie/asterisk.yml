@@ -1,0 +1,12 @@
+asterisk:
+  source_directory: /usr/local/src/asterisk
+  host: pbx.domain.eu
+
+pbx:
+  transport:
+    udp:
+      bind: 0.0.0.0
+    ws:
+      bind: 0.0.0.0
+    wss:
+      bind: 0.0.0.0

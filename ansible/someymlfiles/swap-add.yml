@@ -1,0 +1,37 @@
+---
+- hosts: ham-digital
+  become: true
+  become_method: sudo
+
+  tasks:
+    - name: swap status
+      shell: swapon -s
+      ignore_errors: true
+
+    - name: Create swap file
+      shell: touch /swapfile
+      ignore_errors: true
+
+    - name: file permission
+      shell: chmod 0600 /swapfile
+      ignore_errors: true
+
+    - name: Define swap memory
+      shell: "dd if=/dev/zero of=/swapfile count=4096 bs=1MiB"
+      ignore_errors: true
+
+    - name: Enable swap file
+      shell: mkswap /swapfile
+      ignore_errors: true
+    - name: Verify swap
+      shell: swapon /swapfile
+      ignore_errors: true
+
+    - name: Write swap entry in fstab
+      mount: name=swap
+             src=/swapfile
+             fstype=swap
+             opts=sw
+             passno=0
+             dump=0
+             state=present

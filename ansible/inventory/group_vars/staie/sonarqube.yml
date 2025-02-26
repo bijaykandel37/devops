@@ -1,0 +1,5 @@
+sonarqube:
+    host: sonarqube.staie.sabhriti.eu
+
+secret_path: "secret/data/occs/sonarqube"
+        

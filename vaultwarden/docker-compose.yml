@@ -1,0 +1,26 @@
+version: "3.7"
+volumes:
+  vault_database:
+services:
+  bitwarden:
+    image: vaultwarden/server:1.28.0
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - 8200:80
+      - 8201:3012
+    volumes:
+      - './vault_data:/data'
+      - /var/log/docker:/var/log/docker
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - vault.env
+
+  postgres:
+    image: postgres:14.0-alpine
+    env_file:
+      - database.env
+    volumes:
+      - vault_database:/var/lib/postgresql/data/
+

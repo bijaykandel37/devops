@@ -1,0 +1,11 @@
+; This file is generated using Ansible. Please do not edit manually.
+; The ansible playbook to regenerate this file is located at: https://git.sabhriti.eu/infrastructure/rollout/asterisk/configure
+
+[default]
+; Define a subroutine for dialing
+exten => _X.,1,Dial(PJSIP/${EXTEN})
+exten => _X.,n,Hangup()
+
+{% for provider in providers %}
+#include extensions/{{provider.name}}_extensions.conf
+{% endfor %}

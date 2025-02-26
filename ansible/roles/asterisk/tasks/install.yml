@@ -1,0 +1,224 @@
+---
+- name: Install required packages
+  apt:
+    name:
+      - curl
+      - psmisc
+      - build-essential
+      - libncurses-dev
+      - libssl-dev
+      - libxml2-dev
+      - libsqlite3-dev
+      - uuid-dev
+      - libjansson-dev
+    state: present
+    update_cache: yes
+
+- name: create directories
+  ansible.builtin.file:
+    path: "{{item}}"
+    state: directory
+  with_items:
+    - "/data/asterisk/config_backup/{{ VERSION }}"
+    - "/data/asterisk/logs_backup/{{ VERSION }}"
+    - "{{ asterisk.source_directory }}"
+
+- name: stop asterisk if is already installed and running
+  command: killall -9 safe_asterisk &&  killall -9 asterisk
+  ignore_errors: yes
+
+- name: Stop running a service.
+  ansible.builtin.systemd_service:
+    enabled: no
+    state: stopped
+    name: asterisk
+  ignore_errors: yes
+
+- name: check if previous installation exists
+  ansible.builtin.stat:
+    path: /etc/asterisk/
+  register: asterisk_config
+
+- name: create a backup of configuration files
+  ansible.builtin.copy:
+    src: /etc/asterisk/
+    dest: "/data/asterisk/config_backup/{{ VERSION }}/"
+    remote_src: yes
+  when: asterisk_config.stat.exists
+
+- name: create a backup of log files
+  ansible.builtin.copy:
+    src: /var/log/asterisk/
+    dest: "/data/asterisk/logs_backup/{{ VERSION }}/"
+    remote_src: yes
+  when: asterisk_config.stat.exists
+
+- name: remove previous installation of asterisk
+  ansible.builtin.file:
+    path: "{{item}}"
+    state: absent
+  with_items:
+    - /var/lib/asterisk
+    - /var/lib64/asterisk
+    - /var/spool/asterisk
+    - /usr/lib/asterisk
+    - /usr/lib64/asterisk
+
+- name: Reboot host and wait for it to restart
+  reboot:
+    msg: "Reboot initiated by Ansible"
+    connect_timeout: 5
+    reboot_timeout: 600
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+    test_command: whoami
+
+- name: create temporary installation directory
+  ansible.builtin.file:
+    path: /tmp/asterisk
+    state: directory
+
+- name: Unarchive the zip file containing asterisk
+  ansible.builtin.unarchive:
+    src: "{{ asterisk.source }}/asterisk-{{ VERSION }}.tar.gz"
+    dest: /tmp/asterisk/
+    remote_src: yes
+
+- name: copy extracted files to installation folder
+  ansible.builtin.copy:
+    src: "/tmp/asterisk/asterisk-{{ VERSION }}/"
+    dest: "{{asterisk.source_directory}}"
+    remote_src: yes
+
+- name: Install Asterisk prerequisites
+  command: "{{asterisk.source_directory}}/contrib/scripts/install_prereq install"
+  args:
+    chdir: "{{asterisk.source_directory}}"
+  ignore_errors: yes
+
+- name: Get MP3 source for Asterisk
+  command: "{{asterisk.source_directory}}/contrib/scripts/get_mp3_source.sh"
+  args:
+    chdir: "{{asterisk.source_directory}}"
+  ignore_errors: yes
+
+- name: Run Asterisk configure
+  command: "{{asterisk.source_directory}}/configure"
+  args:
+    chdir: "{{asterisk.source_directory}}"
+
+- name: Configure Asterisk menuselect options
+  shell: |
+    make menuselect.makeopts \
+    && menuselect/menuselect --enable CORE-SOUNDS-EN-WAV CORE-SOUNDS-EN-ULAW CORE-SOUNDS-EN-ALAW CORE-SOUNDS-EN-GSM CORE-SOUNDS-EN-G729 CORE-SOUNDS-EN-G722 CORE-SOUNDS-EN-SLN16 \
+    && menuselect/menuselect --enable MOH-OPSOUND-WAV MOH-OPSOUND-ULAW MOH-OPSOUND-ALAW MOH-OPSOUND-GSM MOH-OPSOUND-G729 MOH-OPSOUND-G722 MOH-OPSOUND-SLN16 \
+    && menuselect/menuselect --enable EXTRA-SOUNDS-EN-WAV EXTRA-SOUNDS-EN-ULAW EXTRA-SOUNDS-EN-ALAW EXTRA-SOUNDS-EN-GSM EXTRA-SOUNDS-EN-G729 EXTRA-SOUNDS-EN-G722 EXTRA-SOUNDS-EN-SLN16 \
+    && menuselect/menuselect --disable BUILD_NATIVE --enable format_mp3 --enable chan_ooh323
+  args:
+    chdir: "{{asterisk.source_directory}}"
+  register: menuselect_output
+  ignore_errors: yes
+
+- name: Enable codec opus
+  shell: |
+    menuselect/menuselect --enable codec_opus menuselect.makeopts
+  args:
+    chdir: "{{asterisk.source_directory}}"
+  register: menuselect_output_opus
+  ignore_errors: yes
+
+# - name: Debug Asterisk menuselect output
+#   debug:
+#     var: menuselect_output
+
+# - name: Debug Asterisk menuselect output
+#   debug:
+#     var: menuselect_output_opus
+
+- name: Compile and install Asterisk with make
+  command: "make"
+  args:
+    chdir: "{{asterisk.source_directory}}"
+
+- name: Compile and install Asterisk with make install
+  command: "make install"
+  args:
+    chdir: "{{asterisk.source_directory}}"
+
+- name: Compile and install Asterisk with make samples
+  command: "make samples"
+  args:
+    chdir: "{{asterisk.source_directory}}"
+
+- name: Compile and install Asterisk with make config
+  command: "make config"
+  args:
+    chdir: "{{asterisk.source_directory}}"
+
+- name: Update shared library cache
+  command: "ldconfig"
+
+- name: Create asterisk group
+  group:
+    name: asterisk
+    state: present
+
+- name: Create asterisk user
+  user:
+    name: asterisk
+    system: yes
+    group: asterisk
+    home: /var/lib/asterisk
+    shell: /bin/false
+
+- name: Add asterisk user to audio and dialout groups
+  user:
+    name: asterisk
+    groups: audio,dialout
+    append: yes
+
+- name: Set ownership of /etc/asterisk
+  file:
+    path: /etc/asterisk
+    owner: asterisk
+    group: asterisk
+    recurse: yes
+
+- name: Set ownership of /var/lib, /var/log, and /var/spool for asterisk
+  file:
+    path: "/var/{{ item }}/asterisk"
+    owner: asterisk
+    group: asterisk
+    recurse: yes
+  loop:
+    - lib
+    - log
+    - spool
+
+- name: Set ownership of /usr/lib/asterisk
+  file:
+    path: /usr/lib/asterisk
+    owner: asterisk
+    group: asterisk
+    recurse: yes
+
+- name: Create logger.conf file for asterisk
+  template:
+    src: logger.conf
+    dest: /etc/asterisk/logger.conf
+
+- name: Create pjsip directory
+  file:
+    path: "{{asterisk.config.path}}/pjsip"
+    state: directory
+
+- name: Create transport configuration
+  ansible.builtin.template:
+    src: templates/transport.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/transport.conf"
+
+- name: start asterisk service
+  systemd:
+    name: "asterisk"
+    state: started
+    enabled: true

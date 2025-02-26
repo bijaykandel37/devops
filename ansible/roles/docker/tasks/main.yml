@@ -1,0 +1,66 @@
+- name: ensure docker is stopped
+  systemd:
+    name: docker
+    state: stopped
+  ignore_errors: yes
+
+- name: Install required system packages
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - python3-pip
+      - virtualenv
+      - python3-setuptools
+    state: latest
+    update_cache: true
+
+- name: Add Docker GPG apt Key
+  apt_key:
+    url: "{{docker.package.gpgUrl}}"
+    state: present
+
+- name: Add Docker Repository
+  apt_repository:
+    repo: "{{docker.package.repository}}"
+    state: present
+
+- name: Update apt and install docker-ce
+  apt:
+    name: docker-ce
+    state: latest
+    update_cache: true
+
+#- name: Install Docker Module for Python
+#  pip:
+#  name: docker
+
+- name: add docker in docker group
+  user:
+    name: docker
+    group: docker
+
+- name: Start service docker, if not started
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Log into private registry and force re-authorization
+  docker_login:
+    registry: "{{docker.registry.url}}"
+    username: "{{ lookup('env', 'CI_REGISTRY_USER') }}"
+    password: "{{ lookup('env', 'CI_REGISTRY_PASSWORD') }}"
+    reauthorize: yes
+
+- name: Create Portainer executable binary
+  copy:
+    dest: "/usr/local/bin/portainer"
+    content: |
+      #!/bin/bash
+      docker run -d -p 9000:9000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest
+    mode: '0755'
+    owner: root
+    group: root

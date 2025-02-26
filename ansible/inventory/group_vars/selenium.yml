@@ -1,0 +1,14 @@
+selenium:
+    docker:
+        image: selenium/standalone-chrome
+        version: 4.20.0-20240425
+
+selenium_hub:
+  docker:
+    image: "selenium/hub"
+    version: "4.23.1"
+
+selenium_node:
+  docker:
+    image: "selenium/node-chrome"
+    version: "127.0.6533.99"

@@ -1,0 +1,22 @@
+- name: Install Fail2Ban
+  apt:
+    name: fail2ban
+    state: present
+    update_cache: true
+
+- name: Create jail.local configuration for Asterisk
+  template:
+    src: templates/jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    mode: '0644'
+
+- name: Delete the default conf file for fail2ban
+  file:
+    path: /etc/fail2ban/jail.d/defaults-debian.conf
+    state: absent
+
+- name: Ensure Fail2Ban is running and enabled
+  systemd:
+    name: fail2ban
+    state: started
+    enabled: true

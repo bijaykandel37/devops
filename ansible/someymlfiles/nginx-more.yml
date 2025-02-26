@@ -1,0 +1,20 @@
+---
+- hosts: digital-cicd
+  become: true
+  become_method: sudo
+  tasks:
+  - name: Install nginx-more.repo
+    shell: yum -y install https://repo.aerisnetwork.com/pub/aeris-release-7.rpm
+    ignore_errors: True
+  - name: Install Nginx*
+    yum: name=nginx-more  state=latest
+  - name: Start nginx server and enable
+    service: name=nginx state=started enabled=yes
+  - name: remove file
+    shell: "rm -rf /usr/share/nginx/html/index.html"
+
+  - name: create file index.html
+    copy:
+      dest: /usr/share/nginx/html/index.html
+      content: |
+         Nginx by ansible

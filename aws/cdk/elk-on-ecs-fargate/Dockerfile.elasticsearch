@@ -1,0 +1,26 @@
+FROM docker.elastic.co/elasticsearch/elasticsearch:8.11.2
+
+COPY ./elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
+
+#COPY ./createkibanaUser.sh /tmp/createkibanaUser.sh
+#RUN chmod +x /tmp/createkibanaUser.sh
+#USER root
+#ENV DOCKERIZE_VERSION v0.6.1
+
+#RUN curl -L https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+ #   | tar -C /usr/local/bin -xzv
+
+ADD --chmod=755 ./createkibanaUser.sh /tmp/createkibanaUser.sh
+
+ENV ES_JAVA_OPTS="-Xmx512m -Xms256m"
+ENV ELASTIC_PASSWORD="elasticpassword"
+ENV discovery.type="single-node"
+ENV network.publish_host="_eth0_"
+
+EXPOSE 9200
+#EXPOSE 9300
+#CMD ["sh", "-c", "sleep 30 && dockerize -wait http://localhost:9200 -timeout 60s /tmp/createkibanaUser.sh"]
+
+#CMD ["dockerize", "-wait", "http://localhost:9200", "-timeout", "60s", "/tmp/createkibanaUser.sh"]
+
+#CMD ["sh", "-c", "sleep 20 && /tmp/createkibanaUser.sh"]

@@ -1,0 +1,6 @@
+; This file is generated using Ansible. Please do not edit manually.
+; The ansible playbook to regenerate this file is located at: https://git.sabhriti.eu/infrastructure/rollout/asterisk/configure
+
+{% for provider in providers %}
+#include pjsip/{{provider.name}}/pjsip.registration.conf
+{% endfor %}

@@ -1,0 +1,13 @@
+[general]
+servername=Asterisk
+enabled=yes
+bindaddr=0.0.0.0
+bindport=8088
+
+tlsenable=yes
+tlsbindaddr=0.0.0.0:8089
+tlscertfile={{ pbx.ssl.public_key_path }}
+tlsprivatekey={{ pbx.ssl.private_key_path }}
+tlsdisablev1=yes
+tlsdisablev11=yes
+;tlsdisablev12=no

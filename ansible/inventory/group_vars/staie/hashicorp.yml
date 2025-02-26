@@ -1,0 +1,4 @@
+vault:
+    network: traefik_network
+    url: infra-prod-1.occs.live
+

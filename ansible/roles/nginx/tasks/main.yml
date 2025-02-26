@@ -1,0 +1,75 @@
+---
+- name: Install required packages
+  apt:
+    name:
+      - nginx
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: yes
+
+- name: Create Nginx server
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/{{ asterisk.host }}.conf
+
+- name: Enable Nginx site
+  file:
+    src: /etc/nginx/sites-available/{{ asterisk.host }}.conf
+    dest: /etc/nginx/sites-enabled/{{ asterisk.host }}.conf
+    state: link
+
+- name: Remove default Nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Restart Nginx
+  systemd:
+    name: nginx
+    state: restarted
+
+- name: Check if SSL certificate exists
+  stat:
+    path: /etc/letsencrypt/live/{{ asterisk.host }}/fullchain.pem
+  register: ssl_cert
+
+- name: Obtain SSL certificate
+  command: certbot certonly --webroot -w /var/www/html -d {{ asterisk.host}} -n --agree-tos --email {{ ssl.email }}
+  when: ssl_cert.stat.exists == false
+
+- name: create directory if does not exists for keys
+  file:
+    path: "{{ssl.keys_directory}}"
+    state: directory
+    recurse: yes
+
+- name: Remove existing links for public and private keys
+  file:
+    path: "{{ ssl.public_key_path }}"
+    state: absent
+
+- name: Remove existing links for public and private keys
+  file:
+    path: "{{ ssl.private_key_path }}"
+    state: absent
+
+- name: Create symlink to public certificate
+  file:
+    src: /etc/letsencrypt/live/{{ asterisk.host }}/fullchain.pem
+    dest: "{{ssl.public_key_path}}"
+    state: link
+
+- name: Create symlink to private.crt
+  file:
+    src: /etc/letsencrypt/live/{{ asterisk.host }}/privkey.pem
+    dest: "{{ssl.private_key_path}}"
+    state: link
+
+- name: Cronjob for renewing ssl every 80 days
+  cron:
+    name: "Renew ssl"
+    minute: "0"
+    hour: "0"
+    day: "0/80"
+    job: "/usr/bin/certbot renew"

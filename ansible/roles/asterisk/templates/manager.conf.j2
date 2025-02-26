@@ -1,0 +1,16 @@
+; This file is generated using Ansible. Please do not edit manually.
+; The ansible playbook to regenerate this file is located at: https://git.sabhriti.eu/infrastructure/rollout/asterisk/configure
+
+[general]
+enabled = {{pbx.ami.enabled}}
+
+port = {{pbx.ami.bind_port}}
+bindaddr = {{pbx.ami.bind_address}}
+
+[{{pbx.ami.username}}]
+secret = {{pbx.ami.secret}}
+deny={{pbx.ami.denied_client.address}}/{{pbx.ami.denied_client.subnet}}
+permit={{pbx.ami.permitted_client.address}}/{{pbx.ami.permitted_client.subnet}}
+
+read = system,call,log,verbose,agent,user,config,dtmf,reporting,cdr,dialplan
+write = system,call,agent,user,config,command,reporting,originate,message
