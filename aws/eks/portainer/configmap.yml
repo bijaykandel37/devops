@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nginx-config
-  namespace: seartify-dev
+  namespace: namespacename
 data:
   default.conf: |
     server {

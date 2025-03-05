@@ -48,5 +48,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: default  # Change if Portainer uses a different service account
-    namespace: seartify-dev 
+    namespace: namespacename 
 
