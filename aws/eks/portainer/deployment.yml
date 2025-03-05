@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portainer-nginx
+  namespace: seartify-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portainer
+  template:
+    metadata:
+      labels:
+        app: portainer
+    spec:
+      containers:
+      - name: portainer
+        image: portainer/portainer-ce:latest
+        env:
+          - name: VIRTUAL_HOST
+            value: "dev.seartify.com"
+          - name: VIRTUAL_PORT
+            value: "9000"
+          - name: VIRTUAL_PATH
+            value: "/portainer"
+        ports:
+        - containerPort: 9000
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
