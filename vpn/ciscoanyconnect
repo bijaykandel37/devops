@@ -21,4 +21,4 @@ sudo apt-get install openconnect network-manager-openconnect network-manager-ope
 
 #Go to settings on your Linux and inside Network, add VPN option.
 
-#Select Anyconnect. And on the gateway, Enter this link ‘anyconnect.ncell.axiata.com’ and click okay.
+#Select Anyconnect. And on the gateway, Enter this link ‘anyconnect.anydomain.com’ and click okay.
