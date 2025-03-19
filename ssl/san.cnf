@@ -6,7 +6,7 @@ prompt = no
 C = NP
 ST = Bagmati
 L = Kathmandu
-O = Ncell Pvt.Ltd
+O = Org Pvt.Ltd
 OU = IT
 CN = domain.com
 [v3_req]

@@ -34,7 +34,7 @@ services:
       - REACT_BANK_NAME=NICASIA
     deploy:
       labels:
-        feature.description: 'Amnil CMS UI'
+        feature.description: 'CMS UI'
       placement:
         constraints: [node.role == manager]
     networks:

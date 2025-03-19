@@ -13,7 +13,7 @@ docker load -i input.tar
 
 ##This will be the dockerfile after the container is up
 
-FROM devopsregistry.ncell.axiata.com/docker-local/fms/letter:20230403
+FROM docker.registry.com/docker-local/fms/letter:20230403
 
 
 ENTRYPOINT ["sleep"]

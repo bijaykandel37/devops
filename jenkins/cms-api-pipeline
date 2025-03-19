@@ -9,7 +9,7 @@ def dev = [:]
 node {
     if (params.Build) {
         stage ('Setting Up Workspace') {
-            checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/${BRANCH}']], extensions: [], userRemoteConfigs: [[credentialsId: 'Ngage Service', url: 'http://repo.amniltech.com:99/amnil-cms/amnil-cms-api.git']]]
+            checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/${BRANCH}']], extensions: [], userRemoteConfigs: [[credentialsId: 'Ngage Service', url: 'http://repo.domain.com:99/orgname/api.git']]]
         }
         stage ('Building Image') {
             withCredentials([usernamePassword(credentialsId: 'image.registry.com credential', passwordVariable: 'JCR_PASSWORD', usernameVariable: 'JCR_USERNAME')]) {
