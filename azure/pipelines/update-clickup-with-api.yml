@@ -1,0 +1,58 @@
+trigger:
+  branches:
+    include:
+      - prod/*
+
+pool:
+  name: poolName
+  demands:
+    - agent.name -equals agentName
+
+steps:
+- checkout: self
+  path: main
+  fetchDepth: 0
+  displayName: Checkingout
+
+- script: |
+    echo "getting the log merge from git"
+    COMMITS=$(git log --format=%B)
+    echo -e "\n these are the commits \n" $COMMITS
+    
+    # Extract task IDs from all commit messages
+    TASK_IDS=$(echo "$COMMITS" | grep 'CU-#' | sed 's/^.*CU-#//; s/ .*//' | sort | uniq) 
+
+    echo -e "\nThese are the task ids : " $TASK_IDS
+
+    if [ -z "$TASK_IDS" ]; then
+      echo -e "\n No task IDs found in merge chain \n"
+      exit 0
+    fi
+    
+    # Update status for each task ID found
+    for TASK_ID in $TASK_IDS; do
+      echo -e "\n Updating task $TASK_ID... \n"
+
+      task_status=$(curl -s -H 'Authorization: '$CLICKUP_TOKEN' ' https://api.clickup.com/api/v2/task/$TASK_ID | jq -r .status.status)
+        echo -e "\n this is the status of task" $TASK_ID ":" $task_status
+
+      if [[ $task_status =~ "ready for deployment" ]]; then
+      # Use the ClickUp API endpoint from our previous setup
+        echo -e "\n Changing the status of this task" $TASK_ID
+        curl -s -X PUT https://api.clickup.com/api/v2/task/$TASK_ID -H 'Authorization: '$CLICKUP_TOKEN' ' -H 'Content-Type: application/json' -d '{"status": "Resolved"}'
+        
+        echo -e "\n Task id " $TASK_ID "changed from ready for deployment to Resolved"
+        
+        RESPONSE_STATUS=$?
+        if [ $RESPONSE_STATUS -eq 0 ]; then
+          echo -e "\nTask $TASK_ID updated successfully\n"
+        else
+          echo -e "\n Failed to update task $TASK_ID \n"
+        fi
+      else
+        echo -e "\n Task " $TASK_ID "is not on ready for deployment\n"
+      fi
+    done
+  displayName: 'Update ClickUp Task from to deploy to completed'
+  env:
+    CLICKUP_TOKEN: $(clickupToken)
