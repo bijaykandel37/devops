@@ -1,0 +1,61 @@
+version: '3.7'
+
+services:
+  framework:
+    image: cms-api:jenkins
+    volumes:
+      - ./data/storage:/var/www/html/storage
+      - ./data/uploads:/var/www/html/public/uploads
+    environment:
+      TZ: Asia/Kathmandu
+    deploy:
+      labels:
+        feature.description: 'CMS API'
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - portal
+    configs:
+      - source: cms.env
+        target: /var/www/html/.env
+
+
+  cms-ui:
+    image: cms-ui:jenkins
+    environment:
+      - PORT=4200
+      - REACT_APP_API_URL=https://cms-domain.com.info/framework/api
+      - REACT_APP_BASE_URL=https://cms-domain.com.info/framework
+      - REACT_CAREER_VALIDATION=false
+      - REACT_SLIDER_AVAILABILITY=false
+      - REACT_TOP_MENU_NAV=true
+      - REACT_FRONTEND_BASE_URL=https://domain.com.info
+      - REACT_COLLEGE_WEBSITE=false
+      - REACT_BANK_NAME=NICASIA
+    deploy:
+      labels:
+        feature.description: 'CMS UI'
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - portal
+
+
+  proxy:
+    image: nginx:alpine
+    ports:
+      - 49015:8080
+    configs:
+      - source: nginx.conf
+        target: /etc/nginx/nginx.conf
+    networks:
+      - portal
+    
+networks:
+  portal:
+
+configs:
+  cms.env:
+    external: true
+  nginx.conf:
+    external: true

@@ -1,0 +1,47 @@
+properties([[$class: 'JiraProjectProperty'], buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '4', numToKeepStr: '8')), gitLabConnection('Amnil Gitlab'), parameters([string(defaultValue: 'jenkins', name: 'TAG'), choice(choices: ['develop', 'staging', 'master', 'tisa-website'], name: 'BRANCH'),choice(choices: ['NICASIA_framework', 'NIMBL_framework', 'TISA_framework', 'SANIMA_framework','LUMBINI_framework'], name: 'SERVICENAME'), booleanParam(defaultValue: true, name: 'Build'), booleanParam('Deploy')])])
+
+def dev = [:]
+        dev.name = "Dev"
+        dev.host = "hostIP"
+        dev.port = 717
+        dev.allowAnyHosts = true
+
+node {
+    if (params.Build) {
+        stage ('Setting Up Workspace') {
+            checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/${BRANCH}']], extensions: [], userRemoteConfigs: [[credentialsId: 'Ngage Service', url: 'http://repo.domain.com:99/orgname/api.git']]]
+        }
+        stage ('Building Image') {
+            withCredentials([usernamePassword(credentialsId: 'image.registry.com credential', passwordVariable: 'JCR_PASSWORD', usernameVariable: 'JCR_USERNAME')]) {
+                sh label: 'Building Docker Image', script: '''chmod +x ${WORKSPACE}/buildocker-develop.sh
+                ${WORKSPACE}/buildocker-develop.sh ${TAG}'''
+            }
+        }
+         stage('Pushing Image to JCR') {
+            withDockerRegistry(credentialsId: 'image.registry.com credential', url: 'https://image.registry.com') {    
+                sh label: 'Pushing Image to JCR', script: """
+                docker tag something/something-cms-api:${TAG} image.registry.com/docker-local/something/something-cms-api:${TAG}
+                docker push image.registry.com/docker-local/something/something-cms-api:${TAG}
+                docker rmi something/something-cms-api:${TAG} image.registry.com/docker-local/something/something-cms-api:${TAG} -f 
+                """
+            }
+        }
+
+    } 
+
+    if (params.Deploy) {
+        stage('SSH into Dev Server') { 
+            withCredentials([usernamePassword(credentialsId: 'Non_Ncell_CICD', passwordVariable: 'SSH_PASSWORD', usernameVariable: 'SSH_USERNAME')]) {
+                dev.user = SSH_USERNAME
+                dev.password = SSH_PASSWORD
+                stage('Pulling image and updating service') {
+                    sshCommand remote: dev, command: "whoami"
+                    sshCommand remote: dev, command: "docker pull image.registry.com/docker-local/something/something-cms-api:${TAG}"
+                    sshCommand remote: dev, command: "docker service update --force ${SERVICENAME}"
+                    
+                }
+            }
+        }
+    }
+}
+

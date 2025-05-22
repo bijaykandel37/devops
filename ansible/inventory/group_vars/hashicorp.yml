@@ -1,0 +1,5 @@
+vault:
+    docker:
+        image: vault
+        version: 1.13.3
+        port: 8200

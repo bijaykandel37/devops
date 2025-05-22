@@ -1,0 +1,75 @@
+trigger:
+- main
+
+pool:
+  name: koili-pool
+  demands:
+    - agent.name -equals agent-koili-language
+
+variables:
+  azureSubscription: 'Microsoft Azure Sponsorship (9135268a-ad68-4240-9613-bce91a80a3ab)'
+  functionName: 'dps-api-prod'
+  secureFilePrefix: 'dps.api.env'
+  ENVIRONMENT: production
+  approvalEnvironmentName: 'prodDeploymentApproversFunctionApp'
+
+stages:
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: Build
+    displayName: 'Build and Package Function App'
+    steps:
+    - task: DownloadSecureFile@1
+      name: envFile
+      displayName: 'Download .env file'
+      inputs:
+        secureFile: $(secureFilePrefix).$(ENVIRONMENT)
+    
+    - script: mv $(envFile.secureFilePath) $(System.DefaultWorkingDirectory)/.env.$(ENVIRONMENT)
+      displayName: 'Move .env file'
+
+    - task: ArchiveFiles@2
+      displayName: 'Create ZIP Package'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact'
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
+        artifactName: 'drop'
+
+- stage: Deploy
+  displayName: 'Deploy Stage'
+  dependsOn: Build
+  jobs:
+  - deployment: DeployToAzure
+    displayName: 'Deploy to Azure Function App'
+    environment: '$(approvalEnvironmentName)' 
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Artifact'
+            inputs:
+              buildType: 'current'
+              artifactName: 'drop'
+              downloadPath: '$(System.DefaultWorkingDirectory)'
+
+          - script: ls -R $(System.DefaultWorkingDirectory)
+            displayName: 'List Files for Debugging'
+
+          - task: AzureFunctionApp@2
+            displayName: 'Deploy Azure Function App'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appName: $(functionName)
+              appType: functionApp
+              package: '$(System.DefaultWorkingDirectory)/drop/functionapp.zip'
+              deploymentMethod: zipDeploy

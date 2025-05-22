@@ -1,0 +1,24 @@
+##BY Shell modules install portainer##
+---
+- hosts: digital-cicd
+  become: true
+  become_method: sudo
+  tasks:
+  - name: install portainer with shell
+    shell: docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+    ignore_errors: True
+
+
+###BY files module with script##
+---
+- hosts: digital-cicd
+  become: true
+  become_method: sudo
+  tasks:
+  - name: install portainer with script
+    script: protainer.sh
+    ignore_errors: True
+
+###the portainer.sh files contain following data###
+vi portainer.sh
+docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer

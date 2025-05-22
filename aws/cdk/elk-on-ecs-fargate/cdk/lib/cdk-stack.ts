@@ -1,0 +1,427 @@
+import * as cdk from 'aws-cdk-lib';
+import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import * as efs from 'aws-cdk-lib/aws-efs';
+
+export class CdkStack extends cdk.Stack {
+  readonly vpc: ec2.IVpc;
+  readonly cluster: ecs.ICluster;
+  
+ constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+   super(scope, id, props);
+
+  // Define the VPC
+  this.vpc = ec2.Vpc.fromLookup(this, 'Vpc', { isDefault: true });
+ 
+ //VPC endpoint
+  const ecrPrivateEndpoint = this.vpc.addInterfaceEndpoint('EcrPrivateEndpoint', {
+    service: ec2.InterfaceVpcEndpointAwsService.ECR,
+    privateDnsEnabled: true,
+   });
+  // Define the cluster
+  this.cluster = new ecs.Cluster(this, 'Cluster', { vpc: this.vpc });
+
+
+
+   // Define the task roles and execution roles for each service
+   const elasticsearchTaskRole = new iam.Role(this, 'ElasticsearchTaskRole', {
+     assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+   });
+   elasticsearchTaskRole.addToPolicy(new iam.PolicyStatement({
+    actions: ['ecr:GetAuthorizationToken','ecr:BatchGetImage','ecr:GetDownloadUrlForLayer','ecr:BatchCheckLayerAvailability','elasticfilesystem:ClientMount','elasticfilesystem:ClientWrite'],
+    resources: ['*'],  // Specify the ARN of your ECR repository if you want to restrict access to a specific repository
+  }));
+
+   const logstashTaskRole = new iam.Role(this, 'LogstashTaskRole', {
+     assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+   });
+   logstashTaskRole.addToPolicy(new iam.PolicyStatement({
+    actions: ['ecr:GetAuthorizationToken','ecr:BatchGetImage','ecr:GetDownloadUrlForLayer','ecr:BatchCheckLayerAvailability'],
+    resources: ['*'],  // Specify the ARN of your ECR repository if you want to restrict access to a specific repository
+  }));
+   const kibanaTaskRole = new iam.Role(this, 'KibanaTaskRole', {
+     assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+   });
+   kibanaTaskRole.addToPolicy(new iam.PolicyStatement({
+    actions: ['ecr:GetAuthorizationToken','ecr:BatchGetImage','ecr:GetDownloadUrlForLayer','ecr:BatchCheckLayerAvailability'],
+    resources: ['*'],  // Specify the ARN of your ECR repository if you want to restrict access to a specific repository
+  }));
+
+  const agentTaskRole = new iam.Role(this, 'AgentTaskRole', {
+    assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+  });
+  agentTaskRole.addToPolicy(new iam.PolicyStatement({
+   actions: ['ecr:GetAuthorizationToken','ecr:BatchGetImage','ecr:GetDownloadUrlForLayer','ecr:BatchCheckLayerAvailability','logs:*'],
+   resources: ['*'],  // Specify the ARN of your ECR repository if you want to restrict access to a specific repository
+ }));
+
+ const logGroup = new logs.LogGroup(this, 'MyLogGroup');
+ const taskExecutionRole = new iam.Role(this, 'TaskExecutionRole', {
+   assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+  });
+  
+  taskExecutionRole.addToPolicy(new iam.PolicyStatement({
+   effect: iam.Effect.ALLOW,
+   resources: ['*'],
+   actions: [
+      'logs:CreateLogStream',
+      'logs:PutLogEvents'
+   ]
+  }));
+  
+
+
+   // Define the task definitions for each service
+   const elasticsearchTaskDef = new ecs.FargateTaskDefinition(this, 'ElasticsearchTaskDef', {
+     cpu: 1024,
+     memoryLimitMiB: 2048,
+     executionRole: elasticsearchTaskRole,
+     taskRole: elasticsearchTaskRole,
+   });
+
+   const logstashTaskDef = new ecs.FargateTaskDefinition(this, 'LogstashTaskDef', {
+     cpu: 1024,
+     memoryLimitMiB: 2048,
+     executionRole: logstashTaskRole,
+     taskRole: logstashTaskRole,
+   });
+
+   const kibanaTaskDef = new ecs.FargateTaskDefinition(this, 'KibanaTaskDef', {
+     cpu: 1024,
+     memoryLimitMiB: 2048,
+     executionRole: kibanaTaskRole,
+     taskRole: kibanaTaskRole,
+   });
+
+   const agentTaskDef = new ecs.FargateTaskDefinition(this, 'AgentTaskDef', {
+    cpu: 1024,
+    memoryLimitMiB: 2048,
+    executionRole: agentTaskRole,
+    taskRole: agentTaskRole,
+  });
+
+// Service Definition
+
+    //Create separate Security Groups for Elastic Kibana and logstash and allow their ports
+
+    const elasticsearchSecurityGroup = new ec2.SecurityGroup(this, 'ElasticsearchSecurityGroup', {
+      vpc: this.vpc,
+    });
+   // elasticsearchSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9200), 'Allow Logstash traffic');
+
+    const kibanaSecurityGroup = new ec2.SecurityGroup(this, 'KibanaSecurityGroup', {
+      vpc: this.vpc,
+    });
+    //kibanaSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(5601), 'Allow Logstash traffic');
+
+    const logstashSecurityGroup = new ec2.SecurityGroup(this, 'LogstashSecurityGroup', {
+      vpc: this.vpc,
+    });
+    const agentSecurityGroup = new ec2.SecurityGroup(this, 'AgentSecurityGroup', {
+      vpc: this.vpc,
+    });
+   // logstashSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9600), 'Allow Logstash traffic');
+
+    const lbSecurityGroup = new ec2.SecurityGroup(this, 'ELBSecurityGroup', {
+      vpc: this.vpc,
+    });
+    lbSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(9200), 'Allow traffic on 9200 for agent');
+
+
+    elasticsearchSecurityGroup.addIngressRule(lbSecurityGroup, ec2.Port.tcp(9200), 'Allow traffic from ALB to elastic');
+    kibanaSecurityGroup.addIngressRule(lbSecurityGroup, ec2.Port.tcp(5601), 'Allow traffic from ALB to kibana');
+    logstashSecurityGroup.addIngressRule(lbSecurityGroup, ec2.Port.tcp(9600), 'Allow traffic from ALB to logstash');
+    agentSecurityGroup.addIngressRule(lbSecurityGroup, ec2.Port.tcp(8220), 'Allow traffic from ALB to agent');
+
+   // elasticsearchSecurityGroup.addIngressRule(lbSecurityGroup, ec2.Port.tcp(80), 'Allow traffic from ALB');
+   // kibanaSecurityGroup.addIngressRule(lbSecurityGroup, ec2.Port.tcp(80), 'Allow traffic from ALB');
+   // logstashSecurityGroup.addIngressRule(lbSecurityGroup, ec2.Port.tcp(80), 'Allow traffic from ALB');
+  
+  
+   //  This was for EFS
+    const efsSecurityGroup = new ec2.SecurityGroup(this, 'EfsSecurityGroup', {
+      vpc: this.vpc,
+      description: 'Security group for EFS',
+    });
+    efsSecurityGroup.addIngressRule(elasticsearchSecurityGroup, ec2.Port.tcp(2049), 'Allow traffic on 9200 for agent');
+
+   const fileSystem = new efs.FileSystem(this, 'ELKEFS', {
+    vpc: this.vpc,
+    securityGroup: efsSecurityGroup,
+    lifecyclePolicy: efs.LifecyclePolicy.AFTER_7_DAYS, // Optional: Set a lifecycle policy
+  });
+
+  const posixUser = {
+    gid: '1000', // Replace with the desired group ID
+    uid: '1000' // Replace with the desired user ID
+  };
+  
+  const creationInfo = {
+    ownerGid: posixUser.gid,
+    ownerUid: posixUser.uid,
+    permissions: '755',
+  };
+
+  const accessPoint = new efs.AccessPoint(this, 'elasticsearchdata', {
+    fileSystem,
+    path: '/elasticsearchdata', // Specify the root directory for the access point
+    posixUser: posixUser, // Set the Posix user configuration
+    createAcl: creationInfo,
+   // creationInfo: creationInfo,
+  });
+
+   const selectedSubnet = this.vpc.selectSubnets({
+    subnetType: ec2.SubnetType.PUBLIC,
+   }).subnets[0];
+   
+   const elasticsearchService = new ecs.FargateService(this, 'ElasticsearchService', {
+    cluster: this.cluster,
+    taskDefinition: elasticsearchTaskDef,
+    assignPublicIp: true,
+    desiredCount: 1,
+    healthCheckGracePeriod: cdk.Duration.seconds(150),
+    vpcSubnets: { subnets: [selectedSubnet] },
+    securityGroups: [elasticsearchSecurityGroup,lbSecurityGroup]
+   });
+
+const logstashService = new ecs.FargateService(this, 'LogstashService', {
+  cluster: this.cluster,
+  taskDefinition: logstashTaskDef,
+  assignPublicIp: true,
+  desiredCount: 1,
+  vpcSubnets: { subnets: [selectedSubnet] },
+  securityGroups: [logstashSecurityGroup,lbSecurityGroup]
+});
+
+const kibanaService = new ecs.FargateService(this, 'KibanaService', {
+  cluster: this.cluster,
+  taskDefinition: kibanaTaskDef,
+  assignPublicIp: true,
+  desiredCount: 1,
+  vpcSubnets: { subnets: [selectedSubnet] },
+  securityGroups: [kibanaSecurityGroup,lbSecurityGroup]
+});
+
+const agentService = new ecs.FargateService(this, 'AgentService', {
+  cluster: this.cluster,
+  taskDefinition: agentTaskDef,
+  assignPublicIp: true,
+  desiredCount: 1,
+  healthCheckGracePeriod: cdk.Duration.seconds(150),
+  vpcSubnets: { subnets: [selectedSubnet] },
+  securityGroups: [agentSecurityGroup,lbSecurityGroup]
+});
+
+   // Create an ECR repository reference
+const repository = ecr.Repository.fromRepositoryName(this, 'Repo', 'testpipeline');
+
+// Specify the image URI for elastic with a specific tag or digest and Create a ContainerImage using the ECR repository and image URI
+const elasticimageUri = `${repository.repositoryUri}:elastic`;
+const elasticsearchImage = ecs.ContainerImage.fromRegistry(elasticimageUri);
+const kibanaimageUri = `${repository.repositoryUri}:kibana`;
+const kibanaImage = ecs.ContainerImage.fromRegistry(kibanaimageUri);   
+const logstashimageUri = `${repository.repositoryUri}:logstash`;
+const logstashsearchImage = ecs.ContainerImage.fromRegistry(logstashimageUri);
+const agentimageUri = `${repository.repositoryUri}:agent`;
+const agentImage = ecs.ContainerImage.fromRegistry(agentimageUri);   
+
+   const elasticsearchContainer = elasticsearchTaskDef.addContainer('ElasticsearchContainer', {
+    image: elasticsearchImage,
+    memoryLimitMiB: 2048,
+    cpu: 1024,
+    essential: true,
+    portMappings: [{ containerPort: 9200, hostPort: 9200, protocol: ecs.Protocol.TCP }],
+   });
+// FOR EFS ONLY
+   elasticsearchContainer.addMountPoints({
+    sourceVolume: 'elasticsearchdata',
+    containerPath: '/usr/share/elasticsearch/data', // Specify the path in the container where you want to mount the EFS
+    readOnly: false, // Adjust this based on your requirements
+  });
+  const elasticsearchdata = {
+    name: 'elasticsearchdata',
+    efsVolumeConfiguration: {
+      fileSystemId: fileSystem.fileSystemId,
+      transitEncryption: 'ENABLED', // Enable transit encryption     
+      authorizationConfig: {
+        accessPointId: accessPoint.accessPointId, // Specify your Access Point Id
+        iam: 'ENABLED',       
+      },
+    },
+  };
+  elasticsearchTaskDef.addVolume(elasticsearchdata);
+
+   const logstashContainer = logstashTaskDef.addContainer('LogstashContainer', {
+    image: logstashsearchImage,
+    memoryLimitMiB: 2048,
+    cpu: 1024,
+    essential: true,
+    portMappings: [{ containerPort: 9600, hostPort: 9600, protocol: ecs.Protocol.TCP }],
+   });
+
+   const kibanaContainer = kibanaTaskDef.addContainer('KibanaContainer', {
+    image: kibanaImage,
+    memoryLimitMiB: 2048,
+    cpu: 1024,
+    essential: true,
+    portMappings: [{ containerPort: 5601, hostPort: 5601, protocol: ecs.Protocol.TCP }],
+   });
+
+   const agentContainer = agentTaskDef.addContainer('AgentContainer', {
+    image: agentImage,
+    memoryLimitMiB: 2048,
+    cpu: 1024,
+    essential: true,
+    environment: {
+      'FLEET_SERVER_SERVICE_TOKEN' : 'value'
+    },
+    logging: ecs.LogDrivers.awsLogs({
+      streamPrefix: 'MyApp',
+      logGroup: logGroup,
+  }),
+    portMappings: [{ containerPort: 8220, hostPort: 8220, protocol: ecs.Protocol.TCP }],
+   });
+
+const lb = new elbv2.ApplicationLoadBalancer(this, 'ELKLoadBalancer', {
+  vpc: this.vpc,
+  internetFacing: true,
+  loadBalancerName: 'ELKLoadBalancer',
+  securityGroup: lbSecurityGroup,
+});
+
+const listener = lb.addListener('Listener', {
+  port: 80,
+  open: true,
+});
+
+// Create a target group for each service
+const elasticsearchTargetGroup = new elbv2.ApplicationTargetGroup(this, 'ElasticsearchTargetGroup', {
+  vpc: this.vpc,
+  protocol: elbv2.ApplicationProtocol.HTTP,
+  port: 80,
+  targetGroupName: 'elastic',
+  targetType: elbv2.TargetType.IP,
+  targets: [elasticsearchService],
+  healthCheck: {
+    interval: cdk.Duration.seconds(30),
+    path: '/',
+    port: '9200',
+    //hostHeader: 'elastic.dev.avid.health"
+    healthyHttpCodes: '200-499', // Set the success codes range here
+  },
+});
+
+
+
+const logstashTargetGroup = new elbv2.ApplicationTargetGroup(this, 'LogstashTargetGroup', {
+  vpc: this.vpc,
+  protocol: elbv2.ApplicationProtocol.HTTP,
+  port: 80,
+  targetGroupName: 'logstash',
+  targetType: elbv2.TargetType.IP,
+  targets: [logstashService],
+  healthCheck: {
+    interval: cdk.Duration.seconds(30),
+    path: '/',
+    port: '9600',
+    healthyHttpCodes: '200-499', // Set the success codes range here
+  },
+});
+
+const kibanaTargetGroup = new elbv2.ApplicationTargetGroup(this, 'KibanaTargetGroup', {
+  vpc: this.vpc,
+  protocol: elbv2.ApplicationProtocol.HTTP,
+  port: 80,
+  targetGroupName: 'kibana',
+  targetType: elbv2.TargetType.IP,
+  targets: [kibanaService],
+  healthCheck: {
+    interval: cdk.Duration.seconds(30),
+    path: '/',
+    port: '5601',
+    healthyHttpCodes: '200-499', // Set the success codes range here
+  },
+});
+
+const agentTargetGroup = new elbv2.ApplicationTargetGroup(this, 'AgentTargetGroup', {
+  vpc: this.vpc,
+  protocol: elbv2.ApplicationProtocol.HTTP,
+  port: 80,
+  targetGroupName: 'agent',
+  targetType: elbv2.TargetType.IP,
+  targets: [agentService],
+  healthCheck: {
+    interval: cdk.Duration.seconds(30),
+    path: '/',
+    port: '8220',
+    healthyHttpCodes: '200-499', // Set the success codes range here
+  },
+});
+
+// Create a rule for each target group
+listener.addTargetGroups('ElasticsearchRule', {
+  targetGroups: [elasticsearchTargetGroup],
+  priority: 1,
+  conditions: [elbv2.ListenerCondition.hostHeaders(['elasticsearch.dev.avid.health'])],
+});
+
+listener.addTargetGroups('LogstashRule', {
+  targetGroups: [logstashTargetGroup],
+  priority: 2,
+  conditions: [elbv2.ListenerCondition.hostHeaders(['logstash.dev.avid.health'])],
+});
+
+listener.addTargetGroups('KibanaRule', {
+  targetGroups: [kibanaTargetGroup],
+  priority: 3,
+  conditions: [elbv2.ListenerCondition.hostHeaders(['kibana.dev.avid.health'])],
+});
+//To set default target Group  which is a compulsary. Here default is set as that of kibana
+listener.addTargetGroups('default', {
+  //priority: 1,
+  targetGroups: [kibanaTargetGroup],
+ }); 
+
+
+ const Httpslistener = lb.addListener('HttpsListener', {
+  port: 443,
+  protocol: elbv2.ApplicationProtocol.HTTPS,
+  open: true,
+});
+
+//const listenerCertificate = elbv2.ListenerCertificate.fromArn('arn:aws:acm:us-east-1:120838669137:certificate/b61517e6-f0dc-44f6-82c1-3865f50c2ef2');
+const listenerCertificate = elbv2.ListenerCertificate.fromArn('arn:aws:acm:ap-south-1:120838669137:certificate/c4237c8c-0bf8-48ed-bd67-f1b47cc171d0');
+
+// Add SSL certificates to the HTTPS listener
+Httpslistener.addCertificates('myCertificate',[listenerCertificate]);
+
+ Httpslistener.addTargetGroups('AgentRule', {
+  targetGroups: [agentTargetGroup],
+  priority: 1,
+  conditions: [elbv2.ListenerCondition.hostHeaders(['agent.dev.avid.health'])],
+});
+ Httpslistener.addTargetGroups('default', {
+  targetGroups: [agentTargetGroup],
+ }); 
+ 
+ const listener2 = lb.addListener('Listener2', {
+  port: 9200,
+  protocol: elbv2.ApplicationProtocol.HTTP,
+  open: true,
+});
+
+ listener2.addTargetGroups('ElasticsearchRule', {
+  targetGroups: [elasticsearchTargetGroup],
+  priority: 1,
+  conditions: [elbv2.ListenerCondition.hostHeaders(['elasticsearch.dev.avid.health'])],
+});
+listener2.addTargetGroups('default', {
+  targetGroups: [elasticsearchTargetGroup],
+ });
+ }
+}
+

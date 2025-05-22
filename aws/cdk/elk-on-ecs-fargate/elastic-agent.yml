@@ -1,0 +1,1602 @@
+id: b04b54d0-b877-11ee-be6b-4d3fa08575da
+revision: 2
+outputs:
+  default:
+    type: elasticsearch
+    hosts:
+      - 'http://elasticsearch.dev.avid.health'
+    username: 'elastic'
+    password: 'elasticpassword'
+output_permissions:
+  default:
+    _elastic_agent_monitoring:
+      indices:
+        - names:
+            - logs-elastic_agent.apm_server-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.apm_server-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.auditbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.auditbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.cloud_defend-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.cloudbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.cloudbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.elastic_agent-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.endpoint_security-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.endpoint_security-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.filebeat_input-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.filebeat_input-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.filebeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.filebeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.fleet_server-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.fleet_server-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.heartbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.heartbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.metricbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.metricbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.osquerybeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.osquerybeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.packetbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-elastic_agent.packetbeat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.pf_elastic_collector-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.pf_elastic_symbolizer-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-elastic_agent.pf_host_agent-default
+          privileges:
+            - auto_configure
+            - create_doc
+    _elastic_agent_checks:
+      cluster:
+        - monitor
+    27845cba-81fa-4a18-b5f4-7f4d054f8df1:
+      indices:
+        - names:
+            - logs-system.auth-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-system.syslog-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-system.application-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-system.security-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-system.system-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.cpu-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.diskio-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.filesystem-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.fsstat-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.load-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.memory-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.network-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.process-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.process.summary-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.socket_summary-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-system.uptime-default
+          privileges:
+            - auto_configure
+            - create_doc
+    afc41b15-04f2-48bf-92f2-4d9f6b993198:
+      indices:
+        - names:
+            - metrics-aws.dynamodb-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.ebs-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-*-*
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.ec2_metrics-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.ecs_metrics-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.elb_metrics-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.lambda-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.natgateway-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.firewall_metrics-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.s3_daily_storage-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.s3_request-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.s3_storage_lens-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.sns-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.sqs-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.transitgateway-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.usage-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-aws.vpcflow-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-aws.route53_public_logs-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-aws.route53_resolver_logs-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.kinesis-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - metrics-aws.apigateway_metrics-default
+          privileges:
+            - auto_configure
+            - create_doc
+        - names:
+            - logs-aws.apigateway_logs-default
+          privileges:
+            - auto_configure
+            - create_doc
+agent:
+  download:
+    sourceURI: 'https://artifacts.elastic.co/downloads/'
+  monitoring:
+    enabled: true
+    use_output: default
+    namespace: default
+    logs: true
+    metrics: true
+  features: {}
+  protection:
+    enabled: false
+    uninstall_token_hash: 9gW9DxtjKH/ynp6vChzoJhIHrxm9tcJSM860fArhqHA=
+    signing_key: >-
+      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEw1bjrroohmjyRDYUWuZUVwOr0LUzYiNBhc1c3za8pctkIo+DuFBkhCRe3dCzQAw0tNjaZO/U6mkP0Cxum9Q/aA==
+inputs:
+  - id: logfile-system-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+    name: system-1
+    revision: 1
+    type: logfile
+    use_output: default
+    meta:
+      package:
+        name: system
+        version: 1.53.0
+    data_stream:
+      namespace: default
+    package_policy_id: 27845cba-81fa-4a18-b5f4-7f4d054f8df1
+    streams:
+      - id: logfile-system.auth-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.auth
+          type: logs
+        ignore_older: 72h
+        paths:
+          - /var/log/auth.log*
+          - /var/log/secure*
+        exclude_files:
+          - \.gz$
+        multiline:
+          pattern: ^\s
+          match: after
+        tags:
+          - system-auth
+        processors:
+          - add_locale: null
+          - rename:
+              fields:
+                - from: message
+                  to: event.original
+              ignore_missing: true
+              fail_on_error: false
+          - syslog:
+              field: event.original
+              ignore_missing: true
+              ignore_failure: true
+      - id: logfile-system.syslog-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.syslog
+          type: logs
+        paths:
+          - /var/log/messages*
+          - /var/log/syslog*
+          - /var/log/system*
+        exclude_files:
+          - \.gz$
+        multiline:
+          pattern: ^\s
+          match: after
+        processors:
+          - add_locale: null
+        tags: null
+        ignore_older: 72h
+  - id: winlog-system-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+    name: system-1
+    revision: 1
+    type: winlog
+    use_output: default
+    meta:
+      package:
+        name: system
+        version: 1.53.0
+    data_stream:
+      namespace: default
+    package_policy_id: 27845cba-81fa-4a18-b5f4-7f4d054f8df1
+    streams:
+      - id: winlog-system.application-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        name: Application
+        data_stream:
+          dataset: system.application
+          type: logs
+        condition: '${host.platform} == ''windows'''
+        ignore_older: 72h
+      - id: winlog-system.security-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        name: Security
+        data_stream:
+          dataset: system.security
+          type: logs
+        condition: '${host.platform} == ''windows'''
+        ignore_older: 72h
+      - id: winlog-system.system-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        name: System
+        data_stream:
+          dataset: system.system
+          type: logs
+        condition: '${host.platform} == ''windows'''
+        ignore_older: 72h
+  - id: system/metrics-system-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+    name: system-1
+    revision: 1
+    type: system/metrics
+    use_output: default
+    meta:
+      package:
+        name: system
+        version: 1.53.0
+    data_stream:
+      namespace: default
+    package_policy_id: 27845cba-81fa-4a18-b5f4-7f4d054f8df1
+    streams:
+      - id: system/metrics-system.cpu-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.cpu
+          type: metrics
+        metricsets:
+          - cpu
+        cpu.metrics:
+          - percentages
+          - normalized_percentages
+        period: 10s
+      - id: system/metrics-system.diskio-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.diskio
+          type: metrics
+        metricsets:
+          - diskio
+        diskio.include_devices: null
+        period: 10s
+      - id: system/metrics-system.filesystem-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.filesystem
+          type: metrics
+        metricsets:
+          - filesystem
+        period: 1m
+        processors:
+          - drop_event.when.regexp:
+              system.filesystem.mount_point: ^/(sys|cgroup|proc|dev|etc|host|lib|snap)($|/)
+      - id: system/metrics-system.fsstat-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.fsstat
+          type: metrics
+        metricsets:
+          - fsstat
+        period: 1m
+        processors:
+          - drop_event.when.regexp:
+              system.fsstat.mount_point: ^/(sys|cgroup|proc|dev|etc|host|lib|snap)($|/)
+      - id: system/metrics-system.load-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.load
+          type: metrics
+        metricsets:
+          - load
+        condition: '${host.platform} != ''windows'''
+        period: 10s
+      - id: system/metrics-system.memory-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.memory
+          type: metrics
+        metricsets:
+          - memory
+        period: 10s
+      - id: system/metrics-system.network-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.network
+          type: metrics
+        metricsets:
+          - network
+        period: 10s
+        network.interfaces: null
+      - id: system/metrics-system.process-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.process
+          type: metrics
+        metricsets:
+          - process
+        period: 10s
+        process.include_top_n.by_cpu: 5
+        process.include_top_n.by_memory: 5
+        process.cmdline.cache.enabled: true
+        process.cgroups.enabled: false
+        process.include_cpu_ticks: false
+        processes:
+          - .*
+      - id: >-
+          system/metrics-system.process.summary-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.process.summary
+          type: metrics
+        metricsets:
+          - process_summary
+        period: 10s
+      - id: >-
+          system/metrics-system.socket_summary-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.socket_summary
+          type: metrics
+        metricsets:
+          - socket_summary
+        period: 10s
+      - id: system/metrics-system.uptime-27845cba-81fa-4a18-b5f4-7f4d054f8df1
+        data_stream:
+          dataset: system.uptime
+          type: metrics
+        metricsets:
+          - uptime
+        period: 10s
+  - id: aws/metrics-dynamodb-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.dynamodb-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.dynamodb
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 5m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - SuccessfulRequestLatency
+              - OnlineIndexPercentageProgress
+              - ProvisionedWriteCapacityUnits
+              - ProvisionedReadCapacityUnits
+              - ConsumedReadCapacityUnits
+              - ConsumedWriteCapacityUnits
+              - ReplicationLatency
+              - TransactionConflict
+              - AccountProvisionedReadCapacityUtilization
+              - AccountProvisionedWriteCapacityUtilization
+            namespace: AWS/DynamoDB
+            resource_type: dynamodb
+            statistic:
+              - Average
+          - name:
+              - SystemErrors
+              - ConsumedReadCapacityUnits
+              - ConsumedWriteCapacityUnits
+              - ConditionalCheckFailedRequests
+              - PendingReplicationCount
+              - TransactionConflict
+              - ReadThrottleEvents
+              - ThrottledRequests
+              - WriteThrottleEvents
+            namespace: AWS/DynamoDB
+            resource_type: dynamodb
+            statistic:
+              - Sum
+          - name:
+              - SuccessfulRequestLatency
+              - ReplicationLatency
+              - AccountMaxReads
+              - AccountMaxTableLevelReads
+              - AccountMaxTableLevelWrites
+              - AccountMaxWrites
+              - MaxProvisionedTableReadCapacityUtilization
+              - MaxProvisionedTableWriteCapacityUtilization
+            namespace: AWS/DynamoDB
+            resource_type: dynamodb
+            statistic:
+              - Maximum
+  - id: aws/metrics-ebs-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.ebs-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.ebs
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 5m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - VolumeReadBytes
+              - VolumeWriteBytes
+              - VolumeReadOps
+              - VolumeWriteOps
+              - VolumeQueueLength
+              - VolumeThroughputPercentage
+              - VolumeConsumedReadWriteOps
+              - BurstBalance
+            namespace: AWS/EBS
+            statistic:
+              - Average
+            resource_type: ec2
+          - name:
+              - VolumeTotalReadTime
+              - VolumeTotalWriteTime
+              - VolumeIdleTime
+            namespace: AWS/EBS
+            statistic:
+              - Sum
+            resource_type: ec2
+  - id: aws-cloudwatch-ec2-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws-cloudwatch
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws-cloudwatch-aws.ec2_logs-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.ec2_logs
+          type: logs
+          elasticsearch:
+            dynamic_dataset: true
+            dynamic_namespace: true
+        region_name: null
+        start_position: beginning
+        scan_frequency: 1m
+        api_sleep: 200ms
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags:
+          - forwarded
+          - aws-ec2-logs
+        publisher_pipeline.disable_host: true
+  - id: aws/metrics-ec2-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.ec2_metrics-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.ec2_metrics
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 5m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - CPUUtilization
+              - CPUCreditUsage
+              - CPUCreditBalance
+              - CPUSurplusCreditBalance
+              - CPUSurplusCreditsCharged
+              - StatusCheckFailed
+              - StatusCheckFailed_Instance
+              - StatusCheckFailed_System
+            namespace: AWS/EC2
+            resource_type: 'ec2:instance'
+            statistic:
+              - Average
+          - name:
+              - DiskReadBytes
+              - DiskReadOps
+              - DiskWriteBytes
+              - DiskWriteOps
+              - NetworkIn
+              - NetworkPacketsIn
+              - NetworkOut
+              - NetworkPacketsOut
+            namespace: AWS/EC2
+            resource_type: 'ec2:instance'
+            statistic:
+              - Sum
+  - id: aws/metrics-ecs-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.ecs_metrics-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.ecs_metrics
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 5m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - CPUUtilization
+              - CPUReservation
+              - MemoryReservation
+              - MemoryUtilization
+              - GPUReservation
+            namespace: AWS/ECS
+            resource_type: ecs
+            statistic:
+              - Average
+  - id: aws/metrics-elb-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.elb_metrics-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.elb_metrics
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 1m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - BackendConnectionErrors
+              - HTTPCode_Backend_2XX
+              - HTTPCode_Backend_3XX
+              - HTTPCode_Backend_4XX
+              - HTTPCode_Backend_5XX
+              - HTTPCode_ELB_4XX
+              - HTTPCode_ELB_5XX
+              - RequestCount
+              - SpilloverCount
+            namespace: AWS/ELB
+            resource_type: elasticloadbalancing
+            statistic:
+              - Sum
+          - name:
+              - HealthyHostCount
+              - SurgeQueueLength
+              - UnHealthyHostCount
+            namespace: AWS/ELB
+            resource_type: elasticloadbalancing
+            statistic:
+              - Maximum
+          - name:
+              - Latency
+              - EstimatedALBActiveConnectionCount
+              - EstimatedALBConsumedLCUs
+              - EstimatedALBNewConnectionCount
+              - EstimatedProcessedBytes
+            namespace: AWS/ELB
+            resource_type: elasticloadbalancing
+            statistic:
+              - Average
+          - name:
+              - ActiveConnectionCount
+              - ClientTLSNegotiationErrorCount
+              - HTTP_Fixed_Response_Count
+              - HTTP_Redirect_Count
+              - HTTP_Redirect_Url_Limit_Exceeded_Count
+              - HTTPCode_ELB_3XX_Count
+              - HTTPCode_ELB_4XX_Count
+              - HTTPCode_ELB_5XX_Count
+              - HTTPCode_ELB_500_Count
+              - HTTPCode_ELB_502_Count
+              - HTTPCode_ELB_503_Count
+              - HTTPCode_ELB_504_Count
+              - IPv6ProcessedBytes
+              - IPv6RequestCount
+              - NewConnectionCount
+              - ProcessedBytes
+              - RejectedConnectionCount
+              - RequestCount
+              - RuleEvaluations
+            namespace: AWS/ApplicationELB
+            resource_type: elasticloadbalancing
+            statistic:
+              - Sum
+          - name:
+              - ConsumedLCUs
+            namespace: AWS/ApplicationELB
+            resource_type: elasticloadbalancing
+            statistic:
+              - Average
+          - name:
+              - HealthyHostCount
+              - UnHealthyHostCount
+            namespace: AWS/ApplicationELB
+            resource_type: elasticloadbalancing
+            statistic:
+              - Maximum
+          - name:
+              - ActiveFlowCount
+              - ActiveFlowCount_TCP
+              - ActiveFlowCount_TLS
+              - ActiveFlowCount_UDP
+              - ConsumedLCUs
+              - ConsumedLCUs_TCP
+              - ConsumedLCUs_TLS
+              - ConsumedLCUs_UDP
+            namespace: AWS/NetworkELB
+            resource_type: elasticloadbalancing
+            statistic:
+              - Average
+          - name:
+              - ClientTLSNegotiationErrorCount
+              - NewFlowCount
+              - NewFlowCount_TLS
+              - NewFlowCount_TCP
+              - NewFlowCount_UDP
+              - ProcessedBytes
+              - ProcessedBytes_TCP
+              - ProcessedBytes_TLS
+              - ProcessedBytes_UDP
+              - TargetTLSNegotiationErrorCount
+              - TCP_Client_Reset_Count
+              - TCP_ELB_Reset_Count
+              - TCP_Target_Reset_Count
+            namespace: AWS/NetworkELB
+            resource_type: elasticloadbalancing
+            statistic:
+              - Sum
+          - name:
+              - HealthyHostCount
+              - UnHealthyHostCount
+            namespace: AWS/NetworkELB
+            resource_type: elasticloadbalancing
+            statistic:
+              - Maximum
+  - id: aws/metrics-lambda-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.lambda-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.lambda
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 5m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - Invocations
+              - Errors
+              - DeadLetterErrors
+              - DestinationDeliveryFailures
+              - Duration
+              - Throttles
+              - IteratorAge
+              - ConcurrentExecutions
+              - UnreservedConcurrentExecutions
+            namespace: AWS/Lambda
+            resource_type: lambda
+            statistic:
+              - Average
+          - name:
+              - ProvisionedConcurrentExecutions
+              - ProvisionedConcurrencyUtilization
+            namespace: AWS/Lambda
+            resource_type: lambda
+            statistic:
+              - Maximum
+          - name:
+              - ProvisionedConcurrencyInvocations
+              - ProvisionedConcurrencySpilloverInvocations
+            namespace: AWS/Lambda
+            resource_type: lambda
+            statistic:
+              - Sum
+  - id: aws/metrics-natgateway-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.natgateway-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.natgateway
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 1m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - BytesInFromDestination
+              - BytesInFromSource
+              - BytesOutToDestination
+              - BytesOutToSource
+              - ConnectionAttemptCount
+              - ConnectionEstablishedCount
+              - ErrorPortAllocation
+              - IdleTimeoutCount
+              - PacketsDropCount
+              - PacketsInFromDestination
+              - PacketsInFromSource
+              - PacketsOutToDestination
+              - PacketsOutToSource
+            namespace: AWS/NATGateway
+            statistic:
+              - Sum
+          - name:
+              - ActiveConnectionCount
+            namespace: AWS/NATGateway
+            statistic:
+              - Maximum
+  - id: aws/metrics-firewall-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.firewall_metrics-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.firewall_metrics
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 60s
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        metrics:
+          - name:
+              - DroppedPackets
+              - PassedPackets
+              - ReceivedPackets
+              - Packets
+            namespace: AWS/NetworkFirewall
+            statistic:
+              - Sum
+  - id: aws/metrics-s3-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.s3_daily_storage-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.s3_daily_storage
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 24h
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        metrics:
+          - name:
+              - BucketSizeBytes
+              - NumberOfObjects
+            namespace: AWS/S3
+            statistic:
+              - Average
+      - id: aws/metrics-aws.s3_request-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.s3_request
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 1m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        metrics:
+          - name:
+              - SelectScannedBytes
+              - SelectReturnedBytes
+              - BytesDownloaded
+              - BytesUploaded
+              - 4xxErrors
+              - 5xxErrors
+              - FirstByteLatency
+              - TotalRequestLatency
+            namespace: AWS/S3
+            statistic:
+              - Average
+          - name:
+              - AllRequests
+              - GetRequests
+              - PutRequests
+              - DeleteRequests
+              - HeadRequests
+              - PostRequests
+              - SelectRequests
+              - ListRequests
+              - BytesDownloaded
+              - BytesUploaded
+            namespace: AWS/S3
+            statistic:
+              - Sum
+  - id: aws/metrics-s3_storage_lens-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.s3_storage_lens-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.s3_storage_lens
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 24h
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        metrics:
+          - namespace: AWS/S3/Storage-Lens
+            statistic:
+              - Average
+        processors:
+          - rename:
+              ignore_missing: true
+              fields:
+                - from: aws.storage-lens.metrics.4xxErrors.avg
+                  to: aws.s3_storage_lens.metrics.4xxErrors.avg
+                - from: aws.storage-lens.metrics.5xxErrors.avg
+                  to: aws.s3_storage_lens.metrics.5xxErrors.avg
+                - from: aws.storage-lens.metrics.AllRequests.avg
+                  to: aws.s3_storage_lens.metrics.AllRequests.avg
+                - from: aws.storage-lens.metrics.BytesDownloaded.avg
+                  to: aws.s3_storage_lens.metrics.BytesDownloaded.avg
+                - from: aws.storage-lens.metrics.BytesUploaded.avg
+                  to: aws.s3_storage_lens.metrics.BytesUploaded.avg
+                - from: aws.storage-lens.metrics.CurrentVersionObjectCount.avg
+                  to: aws.s3_storage_lens.metrics.CurrentVersionObjectCount.avg
+                - from: aws.storage-lens.metrics.CurrentVersionStorageBytes.avg
+                  to: aws.s3_storage_lens.metrics.CurrentVersionStorageBytes.avg
+                - from: aws.storage-lens.metrics.DeleteMarkerObjectCount.avg
+                  to: aws.s3_storage_lens.metrics.DeleteMarkerObjectCount.avg
+                - from: aws.storage-lens.metrics.DeleteRequests.avg
+                  to: aws.s3_storage_lens.metrics.DeleteRequests.avg
+                - from: aws.storage-lens.metrics.EncryptedObjectCount.avg
+                  to: aws.s3_storage_lens.metrics.EncryptedObjectCount.avg
+                - from: aws.storage-lens.metrics.EncryptedStorageBytes.avg
+                  to: aws.s3_storage_lens.metrics.EncryptedStorageBytes.avg
+                - from: aws.storage-lens.metrics.GetRequests.avg
+                  to: aws.s3_storage_lens.metrics.GetRequests.avg
+                - from: aws.storage-lens.metrics.HeadRequests.avg
+                  to: aws.s3_storage_lens.metrics.HeadRequests.avg
+                - from: >-
+                    aws.storage-lens.metrics.IncompleteMultipartUploadObjectCount.avg
+                  to: >-
+                    aws.s3_storage_lens.metrics.IncompleteMultipartUploadObjectCount.avg
+                - from: >-
+                    aws.storage-lens.metrics.IncompleteMultipartUploadStorageBytes.avg
+                  to: >-
+                    aws.s3_storage_lens.metrics.IncompleteMultipartUploadStorageBytes.avg
+                - from: aws.storage-lens.metrics.ListRequests.avg
+                  to: aws.s3_storage_lens.metrics.ListRequests.avg
+                - from: aws.storage-lens.metrics.NonCurrentVersionObjectCount.avg
+                  to: aws.s3_storage_lens.metrics.NonCurrentVersionObjectCount.avg
+                - from: aws.storage-lens.metrics.NonCurrentVersionStorageBytes.avg
+                  to: >-
+                    aws.s3_storage_lens.metrics.NonCurrentVersionStorageBytes.avg
+                - from: aws.storage-lens.metrics.ObjectCount.avg
+                  to: aws.s3_storage_lens.metrics.ObjectCount.avg
+                - from: aws.storage-lens.metrics.ObjectLockEnabledObjectCount.avg
+                  to: aws.s3_storage_lens.metrics.ObjectLockEnabledObjectCount.avg
+                - from: aws.storage-lens.metrics.ObjectLockEnabledStorageBytes.avg
+                  to: >-
+                    aws.s3_storage_lens.metrics.ObjectLockEnabledStorageBytes.avg
+                - from: aws.storage-lens.metrics.PostRequests.avg
+                  to: aws.s3_storage_lens.metrics.PostRequests.avg
+                - from: aws.storage-lens.metrics.PutRequests.avg
+                  to: aws.s3_storage_lens.metrics.PutRequests.avg
+                - from: aws.storage-lens.metrics.ReplicatedObjectCount.avg
+                  to: aws.s3_storage_lens.metrics.ReplicatedObjectCount.avg
+                - from: aws.storage-lens.metrics.ReplicatedStorageBytes.avg
+                  to: aws.s3_storage_lens.metrics.ReplicatedStorageBytes.avg
+                - from: aws.storage-lens.metrics.SelectRequests.avg
+                  to: aws.s3_storage_lens.metrics.SelectRequests.avg
+                - from: aws.storage-lens.metrics.SelectReturnedBytes.avg
+                  to: aws.s3_storage_lens.metrics.SelectReturnedBytes.avg
+                - from: aws.storage-lens.metrics.SelectScannedBytes.avg
+                  to: aws.s3_storage_lens.metrics.SelectScannedBytes.avg
+                - from: aws.storage-lens.metrics.StorageBytes.avg
+                  to: aws.s3_storage_lens.metrics.StorageBytes.avg
+          - drop_fields:
+              ignore_missing: true
+              fields:
+                - aws.storage-lens
+  - id: aws/metrics-sns-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.sns-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.sns
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 5m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - PublishSize
+              - SMSSuccessRate
+            namespace: AWS/SNS
+            resource_type: sns
+            statistic:
+              - Average
+          - name:
+              - NumberOfMessagesPublished
+              - NumberOfNotificationsDelivered
+              - NumberOfNotificationsFailed
+              - NumberOfNotificationsFilteredOut
+              - NumberOfNotificationsFilteredOut-InvalidAttributes
+              - NumberOfNotificationsFilteredOut-NoMessageAttributes
+              - NumberOfNotificationsRedrivenToDlq
+              - NumberOfNotificationsFailedToRedriveToDlq
+              - SMSMonthToDateSpentUSD
+            namespace: AWS/SNS
+            resource_type: sns
+            statistic:
+              - Sum
+  - id: aws/metrics-sqs-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.sqs-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.sqs
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 5m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        metrics:
+          - name:
+              - ApproximateAgeOfOldestMessage
+            namespace: AWS/SQS
+            resource_type: sqs
+            statistic:
+              - Maximum
+          - name:
+              - ApproximateNumberOfMessagesDelayed
+              - ApproximateNumberOfMessagesNotVisible
+              - ApproximateNumberOfMessagesVisible
+              - SentMessageSize
+            namespace: AWS/SQS
+            resource_type: sqs
+            statistic:
+              - Average
+          - name:
+              - NumberOfMessagesDeleted
+              - NumberOfEmptyReceives
+              - NumberOfMessagesReceived
+              - NumberOfMessagesSent
+            namespace: AWS/SQS
+            resource_type: sqs
+            statistic:
+              - Sum
+  - id: aws/metrics-transitgateway-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.transitgateway-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.transitgateway
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 1m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - BytesIn
+              - BytesOut
+              - PacketsIn
+              - PacketsOut
+              - PacketDropCountBlackhole
+              - PacketDropCountNoRoute
+              - BytesDropCountNoRoute
+              - BytesDropCountBlackhole
+            namespace: AWS/TransitGateway
+            statistic:
+              - Sum
+  - id: aws/metrics-usage-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.usage-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.usage
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 1m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        metrics:
+          - namespace: AWS/Usage
+            statistic:
+              - Sum
+  - id: aws-cloudwatch-vpcflow-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws-cloudwatch
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws-cloudwatch-aws.vpcflow-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.vpcflow
+          type: logs
+        region_name: null
+        start_position: beginning
+        scan_frequency: 1m
+        api_sleep: 200ms
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags:
+          - forwarded
+          - aws-vpcflow
+        publisher_pipeline.disable_host: true
+  - id: aws-cloudwatch-route53-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws-cloudwatch
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: >-
+          aws-cloudwatch-aws.route53_public_logs-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.route53_public_logs
+          type: logs
+        region_name: null
+        start_position: beginning
+        scan_frequency: 1m
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags:
+          - forwarded
+          - aws-route53_public-logs
+        publisher_pipeline.disable_host: true
+      - id: >-
+          aws-cloudwatch-aws.route53_resolver_logs-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.route53_resolver_logs
+          type: logs
+        region_name: null
+        start_position: beginning
+        scan_frequency: 1m
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags:
+          - forwarded
+          - aws-route53_resolver-logs
+        publisher_pipeline.disable_host: true
+  - id: aws/metrics-kinesis-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: aws/metrics-aws.kinesis-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.kinesis
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 5m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - GetRecords.Bytes
+              - GetRecords.IteratorAgeMilliseconds
+              - GetRecords.Latency
+              - GetRecords.Records
+              - GetRecords.Success
+              - IncomingBytes
+              - IncomingRecords
+              - PutRecord.Bytes
+              - PutRecord.Latency
+              - PutRecord.Success
+              - PutRecords.Bytes
+              - PutRecords.Latency
+              - PutRecords.Success
+              - ReadProvisionedThroughputExceeded
+              - SubscribeToShard.RateExceeded
+              - SubscribeToShard.Success
+              - SubscribeToShardEvent.Bytes
+              - SubscribeToShardEvent.MillisBehindLatest
+              - SubscribeToShardEvent.Success
+              - WriteProvisionedThroughputExceeded
+              - OutgoingBytes
+              - OutgoingRecords
+              - IteratorAgeMilliseconds
+            namespace: AWS/Kinesis
+            resource_type: kinesis
+            statistic:
+              - Average
+          - name:
+              - GetRecords.Records
+              - GetRecords.Success
+              - PutRecords.TotalRecords
+              - PutRecords.SuccessfulRecords
+              - PutRecords.FailedRecords
+              - PutRecords.ThrottledRecords
+              - SubscribeToShardEvent.Records
+              - OutgoingRecords
+            namespace: AWS/Kinesis
+            resource_type: kinesis
+            statistic:
+              - Sum
+  - id: aws/metrics-apigateway-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws/metrics
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: >-
+          aws/metrics-aws.apigateway_metrics-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.apigateway_metrics
+          type: metrics
+        metricsets:
+          - cloudwatch
+        period: 5m
+        include_linked_accounts: true
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags_filter: null
+        metrics:
+          - name:
+              - 4XXError
+              - 4xx
+              - 5XXError
+              - 5xx
+              - CacheHitCount
+              - CacheMissCount
+              - Count
+              - ConnectCount
+              - MessageCount
+              - IntegrationError
+              - ClientError
+              - ExecutionError
+            namespace: AWS/ApiGateway
+            statistic:
+              - Sum
+          - name:
+              - Latency
+              - IntegrationLatency
+              - DataProcessed
+            namespace: AWS/ApiGateway
+            statistic:
+              - Average
+  - id: aws-cloudwatch-apigateway-afc41b15-04f2-48bf-92f2-4d9f6b993198
+    name: aws-1
+    revision: 1
+    type: aws-cloudwatch
+    use_output: default
+    meta:
+      package:
+        name: aws
+        version: 2.11.3
+    data_stream:
+      namespace: default
+    package_policy_id: afc41b15-04f2-48bf-92f2-4d9f6b993198
+    streams:
+      - id: >-
+          aws-cloudwatch-aws.apigateway_logs-afc41b15-04f2-48bf-92f2-4d9f6b993198
+        data_stream:
+          dataset: aws.apigateway_logs
+          type: logs
+        region_name: null
+        start_position: beginning
+        scan_frequency: 1m
+        api_sleep: 200ms
+        access_key_id: aws_key_id
+        secret_access_key: aws_secret_key
+        tags:
+          - forwarded
+          - aws-apigateway-logs
+        publisher_pipeline.disable_host: true
+signed:
+  data: >-
+    eyJpZCI6ImIwNGI1NGQwLWI4NzctMTFlZS1iZTZiLTRkM2ZhMDg1NzVkYSIsImFnZW50Ijp7ImZlYXR1cmVzIjp7fSwicHJvdGVjdGlvbiI6eyJlbmFibGVkIjpmYWxzZSwidW5pbnN0YWxsX3Rva2VuX2hhc2giOiI5Z1c5RHh0aktIL3lucDZ2Q2h6b0poSUhyeG05dGNKU004NjBmQXJocUhBPSIsInNpZ25pbmdfa2V5IjoiTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFdzFianJyb29obWp5UkRZVVd1WlVWd09yMExVellpTkJoYzFjM3phOHBjdGtJbytEdUZCa2hDUmUzZEN6UUF3MHROamFaTy9VNm1rUDBDeHVtOVEvYUE9PSJ9fSwiaW5wdXRzIjpbeyJpZCI6ImxvZ2ZpbGUtc3lzdGVtLTI3ODQ1Y2JhLTgxZmEtNGExOC1iNWY0LTdmNGQwNTRmOGRmMSIsIm5hbWUiOiJzeXN0ZW0tMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoibG9nZmlsZSJ9LHsiaWQiOiJ3aW5sb2ctc3lzdGVtLTI3ODQ1Y2JhLTgxZmEtNGExOC1iNWY0LTdmNGQwNTRmOGRmMSIsIm5hbWUiOiJzeXN0ZW0tMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoid2lubG9nIn0seyJpZCI6InN5c3RlbS9tZXRyaWNzLXN5c3RlbS0yNzg0NWNiYS04MWZhLTRhMTgtYjVmNC03ZjRkMDU0ZjhkZjEiLCJuYW1lIjoic3lzdGVtLTEiLCJyZXZpc2lvbiI6MSwidHlwZSI6InN5c3RlbS9tZXRyaWNzIn0seyJpZCI6ImF3cy9tZXRyaWNzLWR5bmFtb2RiLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzL21ldHJpY3MifSx7ImlkIjoiYXdzL21ldHJpY3MtZWJzLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzL21ldHJpY3MifSx7ImlkIjoiYXdzLWNsb3Vkd2F0Y2gtZWMyLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzLWNsb3Vkd2F0Y2gifSx7ImlkIjoiYXdzL21ldHJpY3MtZWMyLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzL21ldHJpY3MifSx7ImlkIjoiYXdzL21ldHJpY3MtZWNzLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzL21ldHJpY3MifSx7ImlkIjoiYXdzL21ldHJpY3MtZWxiLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzL21ldHJpY3MifSx7ImlkIjoiYXdzL21ldHJpY3MtbGFtYmRhLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzL21ldHJpY3MifSx7ImlkIjoiYXdzL21ldHJpY3MtbmF0Z2F0ZXdheS1hZmM0MWIxNS0wNGYyLTQ4YmYtOTJmMi00ZDlmNmI5OTMxOTgiLCJuYW1lIjoiYXdzLTEiLCJyZXZpc2lvbiI6MSwidHlwZSI6ImF3cy9tZXRyaWNzIn0seyJpZCI6ImF3cy9tZXRyaWNzLWZpcmV3YWxsLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzL21ldHJpY3MifSx7ImlkIjoiYXdzL21ldHJpY3MtczMtYWZjNDFiMTUtMDRmMi00OGJmLTkyZjItNGQ5ZjZiOTkzMTk4IiwibmFtZSI6ImF3cy0xIiwicmV2aXNpb24iOjEsInR5cGUiOiJhd3MvbWV0cmljcyJ9LHsiaWQiOiJhd3MvbWV0cmljcy1zM19zdG9yYWdlX2xlbnMtYWZjNDFiMTUtMDRmMi00OGJmLTkyZjItNGQ5ZjZiOTkzMTk4IiwibmFtZSI6ImF3cy0xIiwicmV2aXNpb24iOjEsInR5cGUiOiJhd3MvbWV0cmljcyJ9LHsiaWQiOiJhd3MvbWV0cmljcy1zbnMtYWZjNDFiMTUtMDRmMi00OGJmLTkyZjItNGQ5ZjZiOTkzMTk4IiwibmFtZSI6ImF3cy0xIiwicmV2aXNpb24iOjEsInR5cGUiOiJhd3MvbWV0cmljcyJ9LHsiaWQiOiJhd3MvbWV0cmljcy1zcXMtYWZjNDFiMTUtMDRmMi00OGJmLTkyZjItNGQ5ZjZiOTkzMTk4IiwibmFtZSI6ImF3cy0xIiwicmV2aXNpb24iOjEsInR5cGUiOiJhd3MvbWV0cmljcyJ9LHsiaWQiOiJhd3MvbWV0cmljcy10cmFuc2l0Z2F0ZXdheS1hZmM0MWIxNS0wNGYyLTQ4YmYtOTJmMi00ZDlmNmI5OTMxOTgiLCJuYW1lIjoiYXdzLTEiLCJyZXZpc2lvbiI6MSwidHlwZSI6ImF3cy9tZXRyaWNzIn0seyJpZCI6ImF3cy9tZXRyaWNzLXVzYWdlLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzL21ldHJpY3MifSx7ImlkIjoiYXdzLWNsb3Vkd2F0Y2gtdnBjZmxvdy1hZmM0MWIxNS0wNGYyLTQ4YmYtOTJmMi00ZDlmNmI5OTMxOTgiLCJuYW1lIjoiYXdzLTEiLCJyZXZpc2lvbiI6MSwidHlwZSI6ImF3cy1jbG91ZHdhdGNoIn0seyJpZCI6ImF3cy1jbG91ZHdhdGNoLXJvdXRlNTMtYWZjNDFiMTUtMDRmMi00OGJmLTkyZjItNGQ5ZjZiOTkzMTk4IiwibmFtZSI6ImF3cy0xIiwicmV2aXNpb24iOjEsInR5cGUiOiJhd3MtY2xvdWR3YXRjaCJ9LHsiaWQiOiJhd3MvbWV0cmljcy1raW5lc2lzLWFmYzQxYjE1LTA0ZjItNDhiZi05MmYyLTRkOWY2Yjk5MzE5OCIsIm5hbWUiOiJhd3MtMSIsInJldmlzaW9uIjoxLCJ0eXBlIjoiYXdzL21ldHJpY3MifSx7ImlkIjoiYXdzL21ldHJpY3MtYXBpZ2F0ZXdheS1hZmM0MWIxNS0wNGYyLTQ4YmYtOTJmMi00ZDlmNmI5OTMxOTgiLCJuYW1lIjoiYXdzLTEiLCJyZXZpc2lvbiI6MSwidHlwZSI6ImF3cy9tZXRyaWNzIn0seyJpZCI6ImF3cy1jbG91ZHdhdGNoLWFwaWdhdGV3YXktYWZjNDFiMTUtMDRmMi00OGJmLTkyZjItNGQ5ZjZiOTkzMTk4IiwibmFtZSI6ImF3cy0xIiwicmV2aXNpb24iOjEsInR5cGUiOiJhd3MtY2xvdWR3YXRjaCJ9XX0=
+  signature: >-
+    MEUCIQCV0kEahwgYn8RYZH42GOJ+P2Ce6PadR+kxt2sbgoVxuAIgBA6T48T68pBXnyNkpmzhha9uZgg0rasoJvALPmKKe3U=
+secret_references: []

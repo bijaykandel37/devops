@@ -1,0 +1,27 @@
+#!/bin/sh
+set -e
+# Creates backup names like 2020-04-23
+BACKUP_NAME=`date +%F`
+#======Things-to-setup===========#
+BACKUP_TTL_DAYS=03
+HOST_BACKUPS_DIR=/home/backups/wikijs
+DATA_BACKUP=/home/wikijs/data
+DOCKER_CONT_NAME=Wiki-db
+HOST_BACKUP_DEST=$HOST_BACKUPS_DIR/$BACKUP_NAME
+DATABASE=wiki
+USER=wikijs
+#==============================================================#
+echo `date` Backing up..
+docker exec -t $DOCKER_CONT_NAME pg_dump -U $USER $DATABASE > $HOST_BACKUP_DEST
+echo Compressing backup directory to $BACKUP_NAME.tar.gz
+cd $HOST_BACKUPS_DIR
+tar -zcvf $BACKUP_NAME.tar.gz $BACKUP_NAME $DATA_BACKUP
+
+echo Removing backup directory $HOST_BACKUP_DEST
+rm -rf $HOST_BACKUP_DEST
+
+echo Deleting backup tarballs older than $BACKUP_TTL_DAYS days in $HOST_BACKUPS_DIR
+find $HOST_BACKUPS_DIR -type f -mtime +$BACKUP_TTL_DAYS -exec rm '{}' +
+
+echo `date` PGbackup successful
+

@@ -1,0 +1,70 @@
+---
+- name: Create SonarQube volume directories for bind mounts
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "1000"
+    group: "1000"
+  loop:
+    - "{{ sonarqube.user_dir }}/conf"
+    - "{{ sonarqube.user_dir }}/data"
+    - "{{ sonarqube.user_dir }}/logs"
+    - "{{ sonarqube.user_dir }}/extensions"
+
+- name: execute script for vault secrets
+  script:
+    cmd: ../../../fetch_secrets.sh
+  register: vault_token_output
+  environment:
+    REALM_USERNAME: "{{ REALM_USERNAME }}"
+    REALM_PASSWORD: "{{ REALM_PASSWORD }}"
+    REALM_CLIENT_ID: "{{ REALM_CLIENT_ID }}"
+    REALM_CLIENT_SECRET: "{{ REALM_CLIENT_SECRET }}"
+
+- name: Set Vault token as a fact
+  set_fact:
+    VAULT_TOKENS: "{{ vault_token_output.stdout_lines | select('search', '^hvs\\.') | first }}"
+
+# - name: debug token
+#   debug:
+#     msg: the token value is {{VAULT_TOKENS}}
+
+- name: Fetch secret from HashiCorp Vault
+  set_fact:
+    sonarqube_secrets: "{{ lookup('hashi_vault', secret_path, auth_method='token', token=VAULT_TOKENS, url=VAULT_ADDR) }}"
+
+- name: Copy sonar.properties file to remote server
+  template:
+    src: sonar.properties
+    dest: "{{ sonarqube.user_dir }}/conf/sonar.properties"
+    owner: "1000"
+    mode: '0644'
+
+- name: Re-create a sonarqube container
+  docker_container:
+    name: sonarqube
+    image: "{{sonarqube.docker.image}}:{{sonarqube.docker.version}}"
+    state: started
+    recreate: yes
+    restart_policy: "always"
+    networks:
+      - name: "{{sonarqube.docker.network}}"
+    # ports:
+    #   - "{{sonarqube.docker.port}}"
+    volumes:
+      - "{{ sonarqube.user_dir }}/conf:/opt/sonarqube/conf"
+      - "{{ sonarqube.user_dir }}/data:/opt/sonarqube/data"
+      - "{{ sonarqube.user_dir }}/logs:/opt/sonarqube/logs"
+      - "{{ sonarqube.user_dir }}/extensions:/opt/sonarqube/extensions"
+    labels:
+        traefik.http.routers.sonarqube.entrypoints: "websecure"
+        traefik.enable: "true"
+        traefik.http.routers.sonarqube.rule: "Host(`{{sonarqube.host}}`)"
+        traefik.http.services.sonarqube.loadbalancer.server.port: "{{sonarqube.docker.port}}"
+        # traefik.http.routers.sonarqube.middlewares: "traefik-forward-auth"
+        traefik.http.routers.sonarqube.tls.certresolver: "tlsresolver"
+    memory: "4g"
+    memory_reservation: "1g"
+    cpus: 2
+

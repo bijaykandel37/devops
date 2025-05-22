@@ -1,0 +1,15 @@
+location /portainer/ {
+    proxy_pass http://127.0.0.1:9000/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+
+    # Strip the /portainer prefix from the request
+    rewrite ^/portainer(.*)$ $1 break;
+
+    # Handle websockets
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
+
+for this the portainer must be responding to localhost:9000/portainer which is done by setting env variables VIRTUAL_PATH=/portainer VIRTUAL_HOST=domain.com VIRTUAL_PORT=9000

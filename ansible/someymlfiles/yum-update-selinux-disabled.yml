@@ -1,0 +1,22 @@
+---
+- hosts: digital-cicd
+  become: true
+  become_method: sudo
+
+  tasks:
+    - name: Upgrade all packages
+      yum: name=* state=latest
+
+    - name: Disable SELinux at next reboot
+      selinux:
+        state: disabled
+      ignore_errors: true
+
+    - name: Reboot server
+      shell: reboot
+      ignore_errors: true
+      
+    #- name: Set SELinux in permissive mode until the machine is rebooted
+    #  shell: setenforce 0
+    #  ignore_errors: true
+    #  changed_when: false  

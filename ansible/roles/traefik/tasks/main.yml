@@ -1,0 +1,86 @@
+---
+# - name: delete directories if already exists
+#   file:
+#     path: "/opt/traefik/"
+#     state: absent
+
+- name: create directories
+  file:
+    path: "/opt/traefik/"
+    state: directory
+    recurse: yes
+
+- name: Create yml configuration
+  template:
+    src: "traefik.yml.j2"
+    dest: "/opt/traefik/traefik.yml"
+
+- name: Create dynamic yml configuration
+  template:
+    src: "dynamic.yml.j2"
+    dest: "/opt/traefik/dynamic.yml"
+  when: traefik.gateway == "yes"
+
+- name: Ensure Docker network exists for traefik and all services which needs traefik integration
+  docker_network:
+    name: traefik_network
+    state: present
+    driver: bridge
+
+- name: Re-create a traefik container
+  docker_container:
+    name: traefik
+    image: "{{traefik.docker.image}}:{{traefik.docker.version}}"
+    state: started
+    recreate: yes
+    restart_policy: "always"
+    networks:
+      - name: traefik_network
+    command:
+      # - "--log.level={{traefik.loglevel}}"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # - "--entryPoints.web.address=:80"
+      # - "--entryPoints.websecure.address=:443"
+    labels:
+      traefik.enable: "false"
+      traefik.http.routers.traefik_https.rule: "Host(`{{traefik.host}}`)"
+      traefik.http.routers.traefik_https.entrypoints: "websecure"
+      traefik.http.routers.traefik_https.tls: "true"
+      traefik.http.routers.traefik_https.service: "api@internal"
+      traefik.http.routers.traefik_https.tls.certresolver: tlsresolver
+      traefik.http.middlewares.api-auth.basicauth.users: "{{traefik.dashboard.authuser}}:{{traefik.dashboard.authpassword}}"
+      traefik.http.routers.traefik_https.middlewares: "api-auth"
+      traefik.http.routers.http_traefik.rule: "Host(`{{traefik.host}}`)"
+      traefik.http.routers.http_traefik.entrypoints: "web"
+      traefik.http.routers.http_traefik.middlewares: "https_redirect"
+      traefik.http.middlewares.https_redirect.redirectscheme.scheme: "https"
+      traefik.http.middlewares.https_redirect.redirectscheme.permanent: "true"
+      # traefik.http.services.selenium.loadbalancer.sticky.cookie.name: "selenium_cookie"
+    published_ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - "/opt/traefik/traefik.yml:/etc/traefik/traefik.yml"
+        - "/opt/traefik/dynamic.yml:/etc/traefik/dynamic.yml"
+        
+
+# For swarm activation
+
+# - name: Create yml configuration
+#   template:
+#     src: "docker-compose-traefik.yml.j2"
+#     dest: "/opt/traefik/docker-compose-traefik.yml"
+
+# - name: Initiate Docker Swarm
+#   ansible.builtin.shell:
+#     cmd: docker swarm init
+#   register: swarm_init_result
+#   ignore_errors: yes
+
+# - name: Deploy Docker stack
+#   ansible.builtin.shell:
+#     cmd: docker stack deploy -c /opt/traefik/docker-compose-traefik.yml {{ traefik.docker.stack.name }}
+#   when: swarm_init_result.rc == 0 or swarm_init_result.failed

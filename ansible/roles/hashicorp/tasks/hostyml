@@ -1,0 +1,55 @@
+# ---
+# - name: Update package lists
+#   apt: update_cache=yes
+
+# - name: Install required packages
+#   apt:
+#     name:
+#       - gpg
+#       - wget
+#     state: present
+
+# - name: Download HashiCorp GPG key
+#   ansible.builtin.get_url:
+#     url: https://apt.releases.hashicorp.com/gpg
+#     dest: /tmp/hashicorp.gpg
+
+# - name: Convert the GPG key to GPG keyring format
+#   ansible.builtin.command: gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg /tmp/hashicorp.gpg
+#   become: yes
+#   args:
+#     creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+# - name: Determine the distribution codename
+#   ansible.builtin.command: lsb_release -cs
+#   register: lsb_release
+
+# - name: Add HashiCorp repository
+#   lineinfile:
+#     path: /etc/apt/sources.list.d/hashicorp.list
+#     line: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com {{lsb_release.stdout}} main"
+#     create: yes
+
+# - name: Update package lists (again)
+#   apt: update_cache=yes
+
+# - name: Install Vault
+#   apt:
+#     name: vault
+#     state: present
+
+# - name: Clean temporary keyring file (optional)
+#   file:
+#     path: /tmp/hashicorp-archive-keyring.gpg
+#     state: absent
+
+# - name: Reload systemd daemon
+#   ansible.builtin.systemd:
+#     name: systemd
+#     state: reloaded
+
+# - name: Start Vault service
+#   ansible.builtin.systemd:
+#     name: vault
+#     state: started
+#     enabled: yes

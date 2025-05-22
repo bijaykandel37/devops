@@ -1,0 +1,11 @@
+FROM docker.elastic.co/kibana/kibana:8.11.2
+
+COPY ./kibana.yml /usr/share/kibana/config/kibana.yml
+
+ENV discovery.type="single-node"
+ENV ELASTICSEARCH_USERNAME="another_user"
+ENV ELASTICSEARCH_PASSWORD="changeme1"
+ENV XPACK_SECURITY_ENABLED=true
+
+
+EXPOSE 5601

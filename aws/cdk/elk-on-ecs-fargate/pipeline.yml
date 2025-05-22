@@ -1,0 +1,74 @@
+name: Upload ELK images to Amazon ECR and deploy to ecs Fargate
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1                   # set this to your preferred AWS region, e.g., us-west-1
+  ECR_REPOSITORY: testpipeline           # set this to your Amazon ECR repository name
+  ECS_CLUSTER_NAME: nginx-docker-github-test-cluster # set this to your ECS cluster name
+  ECS_SERVICE_NAME: my-nginx-service
+  TASK_DEFINITION: nginx-docker-github-test-task-definition
+jobs:
+  upload:
+    name: Upload to ECR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push images to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build a docker container and
+          # push it to ECR.
+          docker build -f Dockerfile.elasticsearch -t $ECR_REGISTRY/elasticsearch:1.0.0 .
+          docker push $ECR_REGISTRY/elasticsearch:1.0.0
+          echo "image=$ECR_REGISTRY/elasticsearch:1.0.0" >> $GITHUB_ENV
+
+      - name: Deploy to ECS
+        run: |
+         aws ecs register-task-definition \
+            --family ELK-github-test-task-definition \
+            --network-mode awsvpc \
+            --requires-compatibilities FARGATE \
+            --cpu 256 \
+            --memory 512 \
+            --execution-role-arn arn:aws:iam::120838669137:role/ecsTaskExecutionRole \
+            --container-definitions '[{
+            "name": "myElasticContainer",
+            "image": "${{ env.image }}",
+            "essential": true,
+            "portMappings": [
+             {
+               "containerPort": 9200,
+               "hostPort": 9200
+             }]  
+             }]'
+
+           # Get the latest revision number of the task definition
+          LATEST_REVISION=$(aws ecs describe-task-definition --task-definition nginx-docker-github-test-task-definition | jq -r '.taskDefinition.revision')
+            
+          # Update ECS service with the new task definition
+         aws ecs update-service \
+            --cluster $ECS_CLUSTER_NAME \
+            --service $ECS_SERVICE_NAME \
+            --task-definition ELK-github-test-task-definition:$LATEST_REVISION \
+            --force-new-deployment

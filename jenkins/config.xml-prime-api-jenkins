@@ -1,0 +1,139 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1326.ve643e00e9220">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2133.ve46a_6113dfc3"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2133.ve46a_6113dfc3">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+    <org.jenkinsci.plugins.workflow.multibranch.JobPropertyTrackerAction plugin="workflow-multibranch@746.v05814d19c001">
+      <jobPropertyDescriptors>
+        <string>hudson.plugins.jira.JiraProjectProperty</string>
+        <string>hudson.model.ParametersDefinitionProperty</string>
+        <string>com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty</string>
+        <string>jenkins.model.BuildDiscarderProperty</string>
+      </jobPropertyDescriptors>
+    </org.jenkinsci.plugins.workflow.multibranch.JobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.jira.JiraProjectProperty plugin="jira@3.11"/>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>2</daysToKeep>
+        <numToKeep>2</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty plugin="gitlab-plugin@1.7.8">
+      <gitLabConnection>Amnil Gitlab</gitLabConnection>
+      <useAlternativeCredential>false</useAlternativeCredential>
+    </com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>TAG</name>
+          <defaultValue>jenkins</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>BRANCH</name>
+          <choices>
+            <string>develop</string>
+            <string>staging</string>
+            <string>master</string>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>SERVICENAME</name>
+          <choices>
+            <string>PRIME_ONLINE_framework</string>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>Build</name>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>Deploy</name>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3673.v5b_dd74276262">
+    <script>properties([[$class: &apos;JiraProjectProperty&apos;], buildDiscarder(logRotator(artifactDaysToKeepStr: &apos;&apos;, artifactNumToKeepStr: &apos;&apos;, daysToKeepStr: &apos;2&apos;, numToKeepStr: &apos;2&apos;)), gitLabConnection(&apos;Amnil Gitlab&apos;), parameters([string(defaultValue: &apos;jenkins&apos;, name: &apos;TAG&apos;), choice(choices: [&apos;develop&apos;, &apos;staging&apos;, &apos;master&apos;], name: &apos;BRANCH&apos;), choice(choices: [&apos;PRIME_ONLINE_framework&apos;], name: &apos;SERVICENAME&apos;), booleanParam(defaultValue: true, name: &apos;Build&apos;), booleanParam(&apos;Deploy&apos;)])])
+
+
+def dev = [:]
+        dev.name = &quot;AmnilDev&quot;
+        dev.host = &quot;146.190.4.177&quot;
+        dev.port = 717
+        dev.allowAnyHosts = true
+
+def generateBuildReport() {
+    def buildStatus = currentBuild.result ?: &apos;SUCCESS&apos;
+    def report = &quot;&quot;&quot;
+    ** Jenkins Build Report **
+    ${JOB_NAME} - #${BUILD_NUMBER}
+    Build Status: ${buildStatus}
+    Build URL: ${env.BUILD_URL}
+    &quot;&quot;&quot;
+    return report
+}
+
+node {
+    try {
+        if (params.Build) {
+            stage(&apos;Git Checkout&apos;) {
+                checkout([$class: &apos;GitSCM&apos;, branches: [[name: &apos;*/${BRANCH}&apos;]], userRemoteConfigs: [[credentialsId: &apos;Ngage Service&apos;, url: &apos;http://repo.somethingtech.com:99/bank/prime-bank-online-api.git&apos;]]])
+            }
+
+            stage(&apos;Build Image&apos;) {
+                sh label: &apos;&apos;, script: &apos;&apos;&apos;cd ${WORKSPACE}    
+                sh builddocker.sh ${TAG}&apos;&apos;&apos;
+            }
+
+            stage(&apos;Push Image to JCR&apos;) {
+                withCredentials([usernamePassword(credentialsId: &apos;jcr.server247.info credential&apos;, passwordVariable: &apos;JCR_PASSWORD&apos;, usernameVariable: &apos;JCR_USERNAME&apos;)]) {
+                    sh label: &apos;&apos;, script: &apos;&apos;&apos;
+                    docker login -u ${JCR_USERNAME} -p ${JCR_PASSWORD} https://jcr.server247.info
+                    docker tag something/prime-online-cms-api:${TAG} image.azurecr.io/prime-online-cms-api:${TAG}
+                    docker push image.azurecr.io/prime-online-cms-api:${TAG}
+                    &apos;&apos;&apos;
+                }
+            }
+        }
+
+        if (params.Deploy) {
+            stage(&apos;SSH into Dev Server&apos;) { 
+                withCredentials([usernamePassword(credentialsId: &apos;Non_Ncell_CICD&apos;, passwordVariable: &apos;SSH_PASSWORD&apos;, usernameVariable: &apos;SSH_USERNAME&apos;)]) {
+                    dev.user = SSH_USERNAME
+                    dev.password = SSH_PASSWORD
+                    stage(&apos;Pulling image and updating service&apos;) {
+                        sshCommand remote: dev, command: &quot;whoami&quot;
+                        sshCommand remote: dev, command: &quot;docker pull image.azurecr.io/prime-online-cms-api:${TAG}&quot;
+                        sshCommand remote: dev, command: &quot;docker service update --force ${SERVICENAME}&quot;
+                    }
+                }
+            }
+        }
+    }
+    catch(e) {
+        currentBuild.result = &apos;FAILURE&apos;
+        throw e
+    }
+    finally {
+        def buildReport = generateBuildReport()
+        //googlechatnotification message: buildReport, url: &apos;&apos;
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

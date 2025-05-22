@@ -1,0 +1,21 @@
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+[req_distinguished_name]
+C = NP
+ST = Bagmati
+L = Kathmandu
+O = Org Pvt.Ltd
+OU = IT
+CN = domain.com
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = domain.com
+
+
+
+openssl req -out sso.csr -newkey rsa:2048 -nodes -keyout sso.key -config san.cnf

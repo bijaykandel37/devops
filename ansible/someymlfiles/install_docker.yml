@@ -1,0 +1,41 @@
+---
+- hosts: test
+  become: true
+  become_method: sudo
+
+  tasks:
+    - name: Upgrade all the packages
+      yum: name=* state=latest
+
+    - name: Install yum utils
+      yum:
+        name: yum-utils
+        state: latest
+
+    - name: Install docker repo
+      shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+    - name: Install docker engine cli and containerd
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+    
+    - name: start and enable docker service
+      systemd: 
+        name: docker
+        state: started
+        enabled: yes
+
+
+    - name: Install docker-compose 
+      shell: curl -L "https://github.com/docker/compose/releases/download/1.28.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+      ignore_errors: false
+
+    - name: setup symlink of docker-compose
+      file:
+        path: /usr/local/bin/docker-compose
+        mode: "u=x,g=x"

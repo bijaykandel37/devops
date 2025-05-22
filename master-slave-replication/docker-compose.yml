@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  primary:
+    image: mysql:5.7
+    container_name: mysql-primary
+    restart: unless-stopped
+    environment:
+      #      - MYSQL_USER=myuser
+        #      - MYSQL_PASSWORD=mypassword
+      - MYSQL_ROOT_PASSWORD=myrootpassword
+    command: 
+      --default-authentication-plugin=mysql_native_password
+      --sql_mode=NO_ENGINE_SUBSTITUTION
+      --server-id=1
+    cap_add:
+      - all
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - "3306:3306"
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+    volumes:
+      - ./my.cnf_master:/etc/mysql/conf.d/my.cnf
+      #      - ./primary_my.cnf:/etc/mysql/conf.d/my.cnf
+      #- /home/ubuntu/docker/mysql/primary/data:/var/lib/mysql
+        #      - ./log/mysql:/var/log/mysql
+        # - MySql8-db-primary:/home/ubuntu/docker/mysql/primary
+    networks:
+      - mysql_network
+
+  secondary:
+    image: mysql:5.7
+    container_name: mysql-secondary
+    restart: unless-stopped
+    environment:
+      #      - MYSQL_USER=myuser
+      #      - MYSQL_PASSWORD=mypassword
+      - MYSQL_ROOT_PASSWORD=myrootpassword
+    command: 
+      --default-authentication-plugin=mysql_native_password
+      --sql_mode=NO_ENGINE_SUBSTITUTION
+      --log-bin=mysql-bin
+      --server-id=2
+    cap_add:
+      - all
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - "3307:3306"
+    expose:
+      # Opens port 3306 on the container
+      - '3307'
+    volumes:
+      - ./my.cnf_slave:/etc/mysql/conf.d/my.cnf
+      #  - ./secondary01_my.cnf:/etc/mysql/conf.d/my.cnf
+      # - /home/ubuntu/docker/mysql/secondary01/data:/var/lib/mysql
+      # - ./log/mysql:/var/log/mysql
+      # - MySql8-db-secondary01:/home/ubuntu/docker/mysql/secondary01
+    networks:
+      - mysql_network
+
+networks:
+  mysql_network:

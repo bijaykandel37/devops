@@ -1,0 +1,10 @@
+; This file is generated using Ansible. Please do not edit manually.
+; The ansible playbook to regenerate this file is located at: https://git.sabhriti.eu/infrastructure/rollout/asterisk/configure
+
+{% for extension in item.extensions %}
+[{{item.name}}_{{extension.extension}}]
+type=identify
+endpoint={{item.name}}_{{extension.extension}}
+match={{item.host}}
+
+{% endfor %}

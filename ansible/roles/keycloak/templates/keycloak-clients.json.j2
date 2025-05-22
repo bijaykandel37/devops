@@ -1,0 +1,59 @@
+{
+  "clientId": "{{ item.value.clientid }}",
+  "name": "{{ item.key | capitalize }} client",
+  "description": "This is {{ item.key }} user client",
+  "rootUrl": "{{ item.value.url }}",
+  "adminUrl": "{{ item.value.url }}",
+  "baseUrl": "{{ item.value.url }}",
+  "surrogateAuthRequired": false,
+  "enabled": true,
+  "alwaysDisplayInConsole": false,
+  "clientAuthenticatorType": "client-secret",
+  "secret": "{{ keycloak_secrets[item.key ~ '_client_secret'] }}",
+  "redirectUris": [
+    "{{ item.value.url }}/*"
+  ],
+  "webOrigins": [
+    "{{ item.value.url }}"
+  ],
+  "notBefore": 0,
+  "bearerOnly": false,
+  "consentRequired": false,
+  "standardFlowEnabled": true,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": true,
+  "serviceAccountsEnabled": false,
+  "publicClient": false,
+  "frontchannelLogout": true,
+  "protocol": "openid-connect",
+  "attributes": {
+    "oidc.ciba.grant.enabled": "false",
+    "client.secret.creation.time": "1721107116",
+    "backchannel.logout.session.required": "true",
+    "post.logout.redirect.uris": "{{ item.value.url }}",
+    "display.on.consent.screen": "false",
+    "oauth2.device.authorization.grant.enabled": "false",
+    "backchannel.logout.revoke.offline.tokens": "false"
+  },
+  "authenticationFlowBindingOverrides": {},
+  "fullScopeAllowed": true,
+  "nodeReRegistrationTimeout": -1,
+  "defaultClientScopes": [
+    "web-origins",
+    "acr",
+    "roles",
+    "profile",
+    "email"
+  ],
+  "optionalClientScopes": [
+    "address",
+    "phone",
+    "offline_access",
+    "microprofile-jwt"
+  ],
+  "access": {
+    "view": true,
+    "configure": true,
+    "manage": true
+  }
+}

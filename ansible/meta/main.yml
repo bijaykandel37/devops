@@ -1,0 +1,14 @@
+galaxy_info:
+    author: Pawan Bhattarai <pawan.bhattarai@sabhriti.de>, Bijay Kandel <bijaykandel37@gmail.com>
+    description: Ansible Role to install hashicorp vault in Ubuntu
+    company: Sabhriti Solutions
+    issue_tracker_url: https://jira.sabhriti.eu
+    license: Sabhriti Solutions
+    min_ansible_version: 2.14
+    platforms:
+        - name: ubuntu
+          versions:
+              - 22.04
+
+    galaxy_tags:
+        - hashicorp

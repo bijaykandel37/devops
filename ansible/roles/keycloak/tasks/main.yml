@@ -1,0 +1,98 @@
+---
+# - name: delete directories if already exists
+#   file:
+#     path: "{{ keycloak.data_dir }}/"
+#     state: absent
+
+- name: create directories
+  file:
+    path: "{{ keycloak.data_dir }}/"
+    state: directory
+    recurse: yes
+
+- name: Fetch secret from HashiCorp Vault
+  set_fact:
+    keycloak_secrets: "{{ lookup('hashi_vault', secret_path, auth_method='token', token=VAULT_TOKEN, url=VAULT_ADDR) }}"
+
+- name: Create JSON files for all Keycloak clients
+  template:
+    src: "keycloak-clients.json.j2"
+    dest: "{{ keycloak.data_dir }}/{{ item.key }}-client.json"
+  loop: "{{ keycloak.clients | dict2items }}"
+  vars:
+    keycloak_secrets:
+      selenium_client_secret: "{{keycloak_secrets.selenium_client_secret}}"
+      sonarqube_client_secret: "{{keycloak_secrets.sonarqube_client_secret}}"
+      vault_client_secret: "{{keycloak_secrets.vault_client_secret}}"
+      traefik_client_secret: "{{keycloak_secrets.traefik_client_secret}}"
+
+
+- name: Create initialization script for realms
+  template:
+    src: "initialize_keycloak.sh.j2"
+    dest: "{{ keycloak.data_dir }}/initialize_keycloak.sh"
+    mode: '0755'
+
+- name: Save the ssl key to a file
+  copy:
+    content: "{{ keycloak_secrets.private_key }}"
+    dest: "{{ keycloak.data_dir }}/private.key"
+
+- name: Save the ssl certificate to a file
+  copy:
+    content: "{{ keycloak_secrets.public_crt }}"
+    dest: "{{ keycloak.data_dir }}/public.crt"
+
+- name: Ensure that network exists
+  docker_network:
+    name: "traefik_network"
+    driver: "bridge"
+    state: present
+
+# - name: debug variable
+#   debug:
+#     msg: "the secret db host is {{keycloak_db.database_host}}"
+
+- name: Ensure Keycloak container is running
+  docker_container:
+    name: keycloak
+    image:  "{{keycloak.docker.image}}:{{keycloak.docker.version}}"
+    state: started
+    command: "start-dev --hostname-debug=true"
+    restart_policy: always
+    volumes:
+      - "{{ keycloak.data_dir }}/public.crt:{{keycloak.https.crt}}"
+      - "{{ keycloak.data_dir }}/private.key:{{keycloak.https.key}}"
+    env:
+      KC_HOSTNAME_URL: "https://{{keycloak.url}}"
+      KC_HOSTNAME_ADMIN_URL: "https://{{keycloak.url}}/"
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT_HTTPS: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_LOG_LEVEL: "{{keycloak.loglevel}}"
+      KEYCLOAK_ADMIN: "{{keycloak_secrets.admin_user}}"
+      KEYCLOAK_ADMIN_PASSWORD: "{{keycloak_secrets.admin_password}}"
+      KC_DB: "{{keycloak.database.name}}"
+      # KC_DB_URL: "{{keycloak_db.database_host}}"
+      # KC_DB_USERNAME: "{{keycloak_db.database_user}}"
+      # KC_DB_PASSWORD: "{{keycloak_db.database_password}}"
+      KC_DB_URL: "{{keycloak_secrets.database_host}}"
+      KC_DB_USERNAME: "{{keycloak_secrets.database_user}}"
+      KC_DB_PASSWORD: "{{keycloak_secrets.database_password}}"
+      KC_HTTPS_CERTIFICATE_FILE: "{{keycloak.https.crt}}"
+      KC_HTTPS_CERTIFICATE_KEY_FILE: "{{keycloak.https.key}}"
+    # published_ports:
+    #   - "{{keycloak.http.port}}:{{keycloak.http.port}}"
+    #   - "{{keycloak.https.port}}:{{keycloak.https.port}}"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.keycloak.rule: Host(`{{keycloak.url}}`)
+      traefik.http.routers.keycloak.entrypoints: websecure
+      traefik.http.services.keycloak.loadbalancer.server.port: "{{keycloak.http.port}}"
+      traefik.http.routers.keycloak.tls.certresolver: tlsresolver
+    networks:
+      - name: traefik_network
+
+- name: Initialize the realm and clients with bash
+  shell: "cd {{ keycloak.data_dir }} && {{ keycloak.data_dir }}/initialize_keycloak.sh"

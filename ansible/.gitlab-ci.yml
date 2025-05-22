@@ -1,0 +1,25 @@
+include:
+  - project: infrastructure/gitlab-ci-includes
+    file: /run-ansible-playbook.yml
+
+stages:
+ - postgres
+
+staie-postgres:
+  variables:
+    ANSIBLE_GROUP: staie
+    PLAYBOOK: ./playbooks/install-postgres.yml
+  extends:
+    - .run_ansible_playbook
+  stage: postgres
+  when: manual
+
+prod-postgres:
+  variables:
+    ANSIBLE_GROUP: prod
+    PLAYBOOK: ./playbooks/install-postgres.yml
+  extends:
+    - .run_ansible_playbook
+  stage: postgres
+  when: manual
+

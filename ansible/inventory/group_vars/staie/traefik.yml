@@ -1,0 +1,27 @@
+traefik:
+    dashboard:
+        enabled: false
+        authuser: admin
+        authpassword: "$apr1$aH0ROTzSt8e1"
+    host: traefik.infra.com
+    email: info@email.com
+    loglevel: INFO
+    gateway: yes
+
+domainname:
+    infra:
+        sonarqube:
+            gateway: sonarqube.staie.domain.com
+            backend: sonarqube.staie.domain.eu
+
+        selenium:
+            gateway: selenium-grid.staie.domain.com
+            backend: selenium-grid.staie.domain.eu
+
+        keycloak:
+            gateway: keycloak.staie.domain.com
+            backend: keycloak.staie.domain.eu
+
+        vault:
+            gateway: vault.staie.domain.com
+            backend: vault.staie.domain.eu

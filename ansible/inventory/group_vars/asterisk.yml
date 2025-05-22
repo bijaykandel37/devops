@@ -1,0 +1,5 @@
+asterisk:
+    #https://downloads.asterisk.org/pub/telephony/asterisk/asterisk-22.0.0.tar.gz
+    source: https://downloads.asterisk.org/pub/telephony/asterisk
+    config:
+        path: /etc/asterisk

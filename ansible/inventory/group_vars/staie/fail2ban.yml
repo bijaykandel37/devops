@@ -1,0 +1,6 @@
+fail2ban:
+  bantime: 60m
+  maxretry: 5
+  findtime: 600
+  logpath: /var/log/asterisk/security.log
+  ports: 5060,5061

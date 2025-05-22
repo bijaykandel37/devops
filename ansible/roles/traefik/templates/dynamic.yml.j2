@@ -1,0 +1,43 @@
+http:
+  routers:
+{% for env, services in domainname.items() %}
+{% for service, details in services.items() %}
+    {{ service }}-{{ env }}:
+      entryPoints:
+        - websecure
+      rule: "Host(`{{ details.gateway }}`)"
+      service: {{ service }}-{{ env }}-svc
+      middlewares:
+        - {{ service }}-{{ env }}-middleware
+      tls:
+        certResolver: tlsresolver
+
+{% endfor %}
+
+{% endfor %}
+
+  middlewares:
+{% for env, services in domainname.items() %}
+{% for service, details in services.items() %}
+    {{ service }}-{{ env }}-middleware:
+      headers:
+        customRequestHeaders:
+          Host: "{{ details.backend }}"
+          X-Forwarded-Host: "{{ details.backend }}"
+          X-Forwarded-Proto: "https"
+
+{% endfor %}
+
+{% endfor %}
+
+  services:
+{% for env, services in domainname.items() %}
+{% for service, details in services.items() %}
+    {{ service }}-{{ env }}-svc:
+      loadBalancer:
+        servers:
+          - url: "https://{{ details.backend }}{% if service == 'api' %}/api{% endif %}"
+
+{% endfor %}
+
+{% endfor %}

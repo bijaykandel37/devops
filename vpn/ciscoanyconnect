@@ -1,0 +1,24 @@
+#To configure VPN for linux, follow these steps:
+
+#Download Anyconnect-linux package from this link. 
+https://drive.google.com/file/d/1UMsHQf_4VwjzRXe-6funrFRl22UZKbzX/view
+
+#Extract the file using command 
+
+tar xvf anyconnect-linux64-4.9.00086.tgz
+
+cd anyconnect-linux64-4.9.00086/vpn/
+
+sh vpn_install.sh -y
+
+#Now you can open vpn using command /opt/cisco/anyconnect/bin/vpnui 
+
+#Or simply go to applications and select cisco anyconnect vpn.
+
+#Run this command on terminal: 
+
+sudo apt-get install openconnect network-manager-openconnect network-manager-openconnect-gnome
+
+#Go to settings on your Linux and inside Network, add VPN option.
+
+#Select Anyconnect. And on the gateway, Enter this link ‘anyconnect.anydomain.com’ and click okay.

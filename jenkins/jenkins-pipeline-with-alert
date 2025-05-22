@@ -1,0 +1,69 @@
+properties([[$class: 'JiraProjectProperty'], buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '2', numToKeepStr: '2')), gitLabConnection('Amnil Gitlab'), parameters([string(defaultValue: 'jenkins', name: 'TAG'), choice(choices: ['develop', 'staging', 'master'], name: 'BRANCH'), choice(choices: ['PRIME_OFFLINE_framework'], name: 'SERVICENAME'), booleanParam(defaultValue: true, name: 'Build'), booleanParam('Deploy')])])
+
+
+def dev = [:]
+        dev.name = "AmnilDev"
+        dev.host = "14.19.4.7"
+        dev.port = 717
+        dev.allowAnyHosts = true
+
+def generateBuildReport() {
+    def buildStatus = currentBuild.result ?: 'SUCCESS'
+    def report = """
+    ** Jenkins Build Report **
+    ${JOB_NAME} - #${BUILD_NUMBER}
+    Build Status: ${buildStatus}
+    Build URL: ${env.BUILD_URL}
+    """
+    return report
+}
+
+node {
+    try {
+        if (params.Build) {
+            stage('Git Checkout') {
+                checkout([$class: 'GitSCM', branches: [[name: '*/${BRANCH}']], userRemoteConfigs: [[credentialsId: 'Ngage Service', url: 'http://repo.somethingtech.com:99/bank/prime-bank-offline-api.git']]])
+            }
+
+            stage('Build Image') {
+                sh label: '', script: '''cd ${WORKSPACE}    
+                sh builddocker.sh ${TAG}'''
+            }
+
+            stage('Push Image to JCR') {
+                withCredentials([usernamePassword(credentialsId: 'image.registry.com credential', passwordVariable: 'JCR_PASSWORD', usernameVariable: 'JCR_USERNAME')]) {
+                    sh label: '', script: '''
+                    docker login -u ${JCR_USERNAME} -p ${JCR_PASSWORD} https://image.registry.com
+                    docker tag something/prime-offline-cms-api:${TAG} image.registry.com/docker-local/something/prime-offline-cms-api:${TAG}
+                    docker push image.registry.com/docker-local/something/prime-offline-cms-api:${TAG}
+                    '''
+                }
+            }
+        }
+
+        if (params.Deploy) {
+            stage('SSH into Dev Server') { 
+                withCredentials([usernamePassword(credentialsId: 'Non_Ncell_CICD', passwordVariable: 'SSH_PASSWORD', usernameVariable: 'SSH_USERNAME')]) {
+                    dev.user = SSH_USERNAME
+                    dev.password = SSH_PASSWORD
+                    stage('Pulling image and updating service') {
+                        sshCommand remote: dev, command: "whoami"
+                        sshCommand remote: dev, command: "docker pull image.registry.com/docker-local/something/prime-offline-cms-api:${TAG}"
+                        sshCommand remote: dev, command: "docker service update --force ${SERVICENAME}"
+                    
+                    }
+                }
+            }
+        }
+    }
+    catch(e) {
+        currentBuild.result = 'FAILURE'
+        throw e
+    }
+    finally {
+        def buildReport = generateBuildReport()
+        //googlechatnotification message: buildReport, url: ''
+
+    } 
+
+}

@@ -1,0 +1,90 @@
+
+//First install percona-release
+----------------------------------------------------------------------------------------------------------------------------------------
+sudo yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm -y
+----------------------------------------------------------------------------------------------------------------------------------------
+
+//need to disable selinux
+
+//For 8.0
+sudo percona-release setup pxc-80 -y
+sudo yum install percona-xtradb-cluster -y
+
+//for 5.7
+
+//percona-release enable ps-57 release
+percona-release setup ps-57
+sudo yum update -y
+sudo yum install Percona-Server-server-57
+
+
+//For xtradb cluster 
+----------------------------------------------------------------------------------------------------------------------------------------
+sudo dnf module disable mysql -y
+sudo percona-release setup pxc57 -y
+sudo dnf install Percona-XtraDB-Cluster-57 -y
+sudo yum install Percona-XtraDB-Cluster-57 -y
+----------------------------------------------------------------------------------------------------------------------------------------
+
+systemctl status mysql
+systemctl start mysql
+
+//To view password
+sudo grep 'temporary password' /var/log/mysqld.log
+
+//To change password: Compulsary
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'Climatic6-Rudder-Scarecrow';
+
+show status like 'wsrep%';
+show global status where variable_name IN ('wsrep_local_state','wsrep_local_state_comment','wsrep_local_commits','wsrep_received','wsrep_cluster_size','wsrep_cluster_status','wsrep_connected');
+
+//for percona xtrabackup
+
+wget https://www.percona.com/downloads/XtraBackup/Percona-XtraBackup-2.4.4/binary/redhat/7/x86_64/percona-xtrabackup-24-2.4.4-1.el7.x86_64.rpm
+yum localinstall percona-xtrabackup-24-2.4.4-1.el7.x86_64.rpm
+
+OR 
+----------------------------------------------------------------------------------------------------------------------------------------
+sudo percona-release setup ps57
+sudo yum install percona-xtrabackup-24
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+// Also need to create a new user workflow and
+
+----------------------------------------------------------------------------------------------------------------------------------------
+create user 'pm_mbl'@'%' identified by 'Climatic6-Rudder-Scarecrow';
+grant all privileges on wf_workflow.* to 'pm_mbl'@'%';
+flush privileges;
+----------------------------------------------------------------------------------------------------------------------------------------
+
+If the cluster is once setup and you need to restart the percona server, sometimes it maynot be synced with the servers mentioned in gcomm,
+in such case sometimes safe_to_bootstrap: 1 in /var/lib/mysql/grastate.dat file. set it to 0 and restart again
+
+Another issue:
+
+Start one server with safe_to_bootstrap = 0 and no nodes in gcomm://, start next server with participating nodes in gcomm and after it starts, restart the 1st server with nodes in gcomm in wsrep cnf file.
+
+After both db servers are off, the proxysql server must be restarted.
+
+
+
+A command may fail with ER_UNKNOWN_COM_ERRORproducing 'WSREP has not yet prepared node for application use' (or 'Unknown command' in older versions) error message. It happens when a cluster is suspected to be split and the node is in a smaller part — for example, during a network glitch, when nodes temporarily lose each other. It can also occur during state transfer. The node takes this measure to prevent data inconsistency. Its usually a temporary state which can be detected by checking wsrep_ready value.
+
+show global status where variable_name in ('wsrep_ready')\G
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Set variables
+KEYCLOAK_URL="https://{{ keycloak.url }}"
+ADMIN_USER="{{ keycloak_secrets.admin_user }}"
+ADMIN_PASSWORD="{{ keycloak_secrets.admin_password }}"
+REALM_NAME="{{ keycloak.realm.name }}"
+
+# Wait for Keycloak to be fully up and running
+until curl -k -s --output /dev/null --fail "$KEYCLOAK_URL/realms/master"
+do
+  echo "Waiting for Keycloak to start..."
+  sleep 3
+done
+
+echo "Keycloak started."
+
+# Get admin token
+ADMIN_TOKEN=$(curl -k -s -X POST "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=$ADMIN_USER" \
+  -d "password=$ADMIN_PASSWORD" \
+  -d 'grant_type=password' \
+  -d 'client_id=admin-cli' | jq -r '.access_token')
+
+if [[ -z "$ADMIN_TOKEN" || "$ADMIN_TOKEN" == "null" ]]; then
+  echo "Failed to obtain admin token."
+  exit 1
+fi
+
+echo "Got admin token."
+
+# Create realm
+curl -k -s -X POST "$KEYCLOAK_URL/admin/realms" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"realm\": \"$REALM_NAME\", \"enabled\": true}"
+
+echo "Realm creation completed."
+
+# Process client JSON files
+for CLIENT_JSON_PATH in ./*-client.json; do
+  if [ -f "$CLIENT_JSON_PATH" ]; then
+    echo "Processing $CLIENT_JSON_PATH"
+    curl -k -s -X POST "$KEYCLOAK_URL/admin/realms/$REALM_NAME/clients" \
+      -H "Authorization: Bearer $ADMIN_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d @"$CLIENT_JSON_PATH"
+  fi
+done
+
+echo "Client creation completed."
+
+echo "Starting user creation."
+
+# Loop through users from Ansible variables
+{% for client_name, client_data in keycloak.clients.items() %}
+USERNAME="{{ client_data.username }}"
+PASSWORD="{{ keycloak_secrets[client_name + '_password'] }}"
+EMAIL="{{ client_data.username }}@example.com"  # Replace this with a real email if required
+
+# Create user
+curl -s -X POST "${KEYCLOAK_URL}/admin/realms/${REALM_NAME}/users" \
+    -H "Authorization: Bearer $ADMIN_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "{\"username\":\"${USERNAME}\",\"enabled\":true,\"email\":\"${EMAIL}\"}"
+
+# Get user ID
+USER_ID=$(curl -s -X GET "${KEYCLOAK_URL}/admin/realms/${REALM_NAME}/users?username=${USERNAME}" \
+    -H "Authorization: Bearer $ADMIN_TOKEN" \
+    -H "Content-Type: application/json" | jq -r '.[0].id')
+
+if [[ -n "$USER_ID" && "$USER_ID" != "null" ]]; then
+  echo "User created with ID: $USER_ID"
+
+  # Set password for the created user
+  curl -s -X PUT "${KEYCLOAK_URL}/admin/realms/${REALM_NAME}/users/${USER_ID}/reset-password" \
+      -H "Authorization: Bearer $ADMIN_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d "{\"type\":\"password\",\"temporary\":false,\"value\":\"${PASSWORD}\"}"
+
+  echo "Password set for user: $USERNAME"
+else
+  echo "Failed to create user: $USERNAME"
+fi
+
+{% endfor %}
+
+echo "All users created successfully."

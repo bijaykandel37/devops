@@ -1,0 +1,16 @@
+; This file is generated using Ansible. Please do not edit manually.
+; The ansible playbook to regenerate this file is located at: https://git.sabhriti.eu/infrastructure/rollout/asterisk/configure
+
+[{{item.name}}_queue](!)
+musicclass=default ; play [default] music
+strategy=ringall ; use the Round Robin Memory strategy
+joinempty=yes ; join the queue when no members available
+leavewhenempty=no ; don't leave the queue no members available
+ringinuse=no ; don't ring members when already InUse
+retry=300 ; retry the agent after 5 minutes after the agent hangs up
+timeout=10800; timeout the call after 3 hours
+
+{% for extension in item.extensions %}
+[{{item.name}}_{{extension.external_number}}]({{item.name}}_queue)
+
+{% endfor %}

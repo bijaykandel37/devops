@@ -1,0 +1,47 @@
+trigger:
+- dev
+
+pool:
+  name: koili-pool
+  demands:
+    - agent.name -equals agent-koili-middleware
+
+variables:
+  DOCKER_REGISTRY: koili.azurecr.io
+  IMAGE_NAME: ipn-api
+  TAG_NAME: dev
+  ENVIRONMENT: development
+
+
+stages:
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: Build
+    displayName: 'Build and Package Function App into docker image'
+    steps:
+    - task: DownloadSecureFile@1
+      name: envFile
+      displayName: 'Download .env file'
+      inputs:
+        secureFile: 'ipn.api.env.$(ENVIRONMENT)'
+    
+    - script: mv $(envFile.secureFilePath) $(System.DefaultWorkingDirectory)/.env.$(ENVIRONMENT)
+      displayName: 'Move .env file'
+        
+    - script: docker build --no-cache -t $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(TAG_NAME) .
+      displayName: 'Build docker image with no cache'
+
+
+- stage: Deploy
+  displayName: 'Deploy Stage by pushing docker image to registry'
+  dependsOn: Build
+  jobs:
+  - job: Deploy
+    displayName: 'Deploy to Azure Function App'
+    steps:
+    - script: docker login -u ${username} -p ${password} ${DOCKER_REGISTRY}  && docker push $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(TAG_NAME)
+      displayName: 'Login and push to Azure container registry which triggers the deployment'
+      env:
+        username: $(d_user)
+        password: $(d_pass)

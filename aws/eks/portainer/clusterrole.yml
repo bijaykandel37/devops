@@ -1,0 +1,52 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: portainer-cluster-admin
+rules:
+  - apiGroups: [""]
+    resources: ["resourcequotas"]
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: [""]
+    resources: ["nodes", "events", "services", "pods", "namespaces", "configmaps", "secrets", "persistentvolumeclaims", "persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses", "ingressclasses"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+
+  - apiGroups: ["helm.toolkit.fluxcd.io", "argoproj.io", "kubeapps.com"]
+    resources: ["helmreleases", "applications"]
+    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: portainer-cluster-admin-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: portainer-cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: default  # Change if Portainer uses a different service account
+    namespace: namespacename 
+

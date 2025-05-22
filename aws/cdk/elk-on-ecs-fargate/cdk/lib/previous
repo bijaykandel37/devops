@@ -1,0 +1,32 @@
+import * as cdk from 'aws-cdk-lib';
+//import * as cdk from '@aws-cdk/core';
+
+import * as ecs from '@aws-cdk/aws-ecs';
+import { Construct } from 'constructs';
+import * as iam from '@aws-cdk/aws-iam';
+
+export class CdkStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+   const taskRole = new iam.Role(this, 'MyTaskRole', {
+     assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+   });
+
+   // Define the execution role
+   const executionRole = new iam.Role(this, 'MyExecutionRole', {
+     assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+   });
+
+   // Define the task definition
+   const taskDef = new ecs.FargateTaskDefinition(this, 'MyTaskDef', {
+     cpu: 256,
+     memoryLimitMiB: 512,
+     executionRole: executionRole,
+     taskRole: taskRole,
+   });
+ }
+
+
+  }
+}

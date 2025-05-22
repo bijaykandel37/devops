@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portainer-nginx
+  namespace: namespacename
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portainer
+  template:
+    metadata:
+      labels:
+        app: portainer
+    spec:
+      containers:
+      - name: portainer
+        image: portainer/portainer-ce:latest
+        env:
+          - name: VIRTUAL_HOST
+            value: "your.domain.com"
+          - name: VIRTUAL_PORT
+            value: "9000"
+          - name: VIRTUAL_PATH
+            value: "/portainer"
+        ports:
+        - containerPort: 9000
+        resources:
+          requests:
+            cpu: "250m"   # Request 250 millicores (0.25 vCPU)
+            memory: "256Mi"  # Request 256Mi of memory
+          limits:
+            cpu: "500m"   # Limit to 500 millicores (0.5 vCPU)
+            memory: "512Mi"  # Limit to 512Mi of memory
+
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+        resources:
+          requests:
+            cpu: "100m"   # Request 100 millicores (0.1 vCPU)
+            memory: "128Mi"  # Request 128Mi of memory
+          limits:
+            cpu: "250m"   # Limit to 250 millicores (0.25 vCPU)
+            memory: "256Mi"  # Limit to 256Mi of memory
+
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config

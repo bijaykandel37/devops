@@ -1,0 +1,8 @@
+postgresql:
+  listen_address: 10.0.0.4
+  version: 14
+  hba_conf_path: /etc/postgresql/14/main/pg_hba.conf
+  postgresql_conf_path: /etc/postgresql/14/main/postgresql.conf
+  public_network_cidr: "10.0.0.0/16"
+  # password: "your_secure_password123321"
+

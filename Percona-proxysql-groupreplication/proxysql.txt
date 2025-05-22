@@ -1,0 +1,257 @@
+sudo yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm -y
+yum install proxysql -y
+sudo dnf module disable mysql -y
+sudo dnf install Percona-XtraDB-Cluster-57 -y
+systemctl start proxysql
+
+
+//after installing, run this for proxysql cli, use default password as 'admin'
+---------------------------------------------------------------------------------------------
+mysql -u admin -p -h 127.0.0.1 -P 6032 --prompt='ProxySQLAdmin> '
+mysql -u wf_workflow -p -h 127.0.0.1 -P 6033 --prompt='ProxySQLAdmin> '
+
+//change the password in proxysql server:
+---------------------------------------------------------------------------------------------
+UPDATE global_variables SET variable_value='admin:Climatic6-Rudder-Scarecrow' WHERE variable_name='admin-admin_credentials';
+LOAD ADMIN VARIABLES TO RUNTIME;
+SAVE ADMIN VARIABLES TO DISK;
+
+
+//Configure monitoring on each participating node
+// Download the SQL file containing some necessary functions for ProxySQL group replication support to work. 
+--------------------------------------------------------------------------------------------------------------------------
+curl -OL https://gist.github.com/lefred/77ddbde301c72535381ae7af9f968322/raw/5e40b03333a3c148b78aa348fd2cd5b5dbb36e4d/addition_to_sys.sql
+mysql -u root -p < addition_to_sys.sql
+
+--------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+
+USE sys;
+
+DELIMITER $$
+
+CREATE FUNCTION IFZERO(a INT, b INT)
+RETURNS INT
+DETERMINISTIC
+RETURN IF(a = 0, b, a)$$
+
+CREATE FUNCTION LOCATE2(needle TEXT(10000), haystack TEXT(10000), offset INT)
+RETURNS INT
+DETERMINISTIC
+RETURN IFZERO(LOCATE(needle, haystack, offset), LENGTH(haystack) + 1)$$
+
+CREATE FUNCTION GTID_NORMALIZE(g TEXT(10000))
+RETURNS TEXT(10000)
+DETERMINISTIC
+RETURN GTID_SUBTRACT(g, '')$$
+
+CREATE FUNCTION GTID_COUNT(gtid_set TEXT(10000))
+RETURNS INT
+DETERMINISTIC
+BEGIN
+  DECLARE result BIGINT DEFAULT 0;
+  DECLARE colon_pos INT;
+  DECLARE next_dash_pos INT;
+  DECLARE next_colon_pos INT;
+  DECLARE next_comma_pos INT;
+  SET gtid_set = GTID_NORMALIZE(gtid_set);
+  SET colon_pos = LOCATE2(':', gtid_set, 1);
+  WHILE colon_pos != LENGTH(gtid_set) + 1 DO
+     SET next_dash_pos = LOCATE2('-', gtid_set, colon_pos + 1);
+     SET next_colon_pos = LOCATE2(':', gtid_set, colon_pos + 1);
+     SET next_comma_pos = LOCATE2(',', gtid_set, colon_pos + 1);
+     IF next_dash_pos < next_colon_pos AND next_dash_pos < next_comma_pos THEN
+       SET result = result +
+         SUBSTR(gtid_set, next_dash_pos + 1,
+                LEAST(next_colon_pos, next_comma_pos) - (next_dash_pos + 1)) -
+         SUBSTR(gtid_set, colon_pos + 1, next_dash_pos - (colon_pos + 1)) + 1;
+     ELSE
+       SET result = result + 1;
+     END IF;
+     SET colon_pos = next_colon_pos;
+  END WHILE;
+  RETURN result;
+END$$
+
+CREATE FUNCTION gr_applier_queue_length()
+RETURNS INT
+DETERMINISTIC
+BEGIN
+  RETURN (SELECT sys.gtid_count( GTID_SUBTRACT( (SELECT
+Received_transaction_set FROM performance_schema.replication_connection_status
+WHERE Channel_name = 'group_replication_applier' ), (SELECT
+@@global.GTID_EXECUTED) )));
+END$$
+
+CREATE FUNCTION gr_member_in_primary_partition()
+RETURNS VARCHAR(3)
+DETERMINISTIC
+BEGIN
+  RETURN (SELECT IF( MEMBER_STATE='ONLINE' AND ((SELECT COUNT(*) FROM
+performance_schema.replication_group_members WHERE MEMBER_STATE != 'ONLINE') >=
+((SELECT COUNT(*) FROM performance_schema.replication_group_members)/2) = 0),
+'YES', 'NO' ) FROM performance_schema.replication_group_members JOIN
+performance_schema.replication_group_member_stats USING(member_id));
+END$$
+
+CREATE VIEW gr_member_routing_candidate_status AS SELECT
+sys.gr_member_in_primary_partition() as viable_candidate,
+IF( (SELECT (SELECT GROUP_CONCAT(variable_value) FROM
+performance_schema.global_variables WHERE variable_name IN ('read_only',
+'super_read_only')) != 'OFF,OFF'), 'YES', 'NO') as read_only,
+sys.gr_applier_queue_length() as transactions_behind, Count_Transactions_in_queue as 'transactions_to_cert' from performance_schema.replication_group_member_stats;$$
+
+DELIMITER ;
+--------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+CREATE USER 'monitor'@'%.102.66' IDENTIFIED BY 'Climatic6-Rudder-Scarecrow';
+GRANT SELECT on sys.* to 'monitor'@'%.102.66';
+GRANT USAGE, REPLICATION CLIENT ON *.* TO 'monitor'@'%.102.66';
+FLUSH PRIVILEGES;
+
+
+//configure monitoring on proxysql server
+---------------------------------------------------------------------------------------------
+UPDATE global_variables SET variable_value='monitor' WHERE variable_name='mysql-monitor_username';
+UPDATE global_variables SET variable_value='Freefall6-Fax-Litter' WHERE variable_name='mysql-monitor_password';
+LOAD ADMIN VARIABLES TO RUNTIME;
+SAVE ADMIN VARIABLES TO DISK;
+LOAD MYSQL USERS TO RUNTIME;
+SAVE MYSQL USERS TO DISK;
+LOAD MYSQL VARIABLES TO RUNTIME;
+SAVE MYSQL VARIABLES TO DISK;
+
+
+
+//to remove access denied issue for monitor user in logs seen in mysql worker nodes, execute this on  proxysql server
+SELECT * FROM main.mysql_users WHERE username='monitor';
+UPDATE main.mysql_users SET default_schema='monitor', transaction_persistent=0 WHERE username='monitor';//Not useful..
+LOAD MYSQL VARIABLES TO RUNTIME;
+SAVE MYSQL VARIABLES TO DISK;
+
+
+//to check if monitoring is working well
+SELECT * FROM monitor.mysql_server_connect_log ORDER BY time_start_us DESC LIMIT 6;
+SELECT * FROM monitor.mysql_server_ping_log ORDER BY time_start_us DESC LIMIT 6;
+
+update global_variables set variable_value='false' where variable_name='admin-hash_passwords';
+load admin variables to runtime; save admin variables to disk;
+load mysql users to runtime; save mysql users to disk;
+
+//Add mysql nodes to ProxySQL server pool
+//1 for the offline host group, 2 for the writer host group, 3 for the reader host group, and 4 for the backup writer host group
+//writers, which are MySQL nodes that can accept queries that change data. ProxySQL makes sure to maintain all primary nodes up to the maximum defined amount in this group.
+//backup writers, which are also MySQL nodes that can accept queries that change data. However, those nodes are not designated as writers; primary nodes exceeding the defined amount of maintained writers are kept in this group, and are promoted to writers if one of the writers fails.
+//readers are MySQL nodes that cannot accept queries changing data and should be used as read-only nodes. ProxySQL puts only slave nodes here.
+//offline, which is for nodes that are misbehaving due to issues like lack of connectivity or slow traffic.
+//active set to 1 enables ProxySQL’s monitoring of these host groups.
+//max_writers defines how many nodes can act as writers. We used 3 here because In a multi-primary configuration, all nodes can be treated equal, so here we used 3 (the total number of nodes).
+//writer_is_also_reader set to 1 instructs ProxySQL to treat writers as readers as well.
+//max_transactions_behind sets the maximum number of delayed transactions before a node is classified as offline.
+---------------------------------------------------------------------------------------------
+INSERT INTO mysql_group_replication_hostgroups (writer_hostgroup, backup_writer_hostgroup, reader_hostgroup, offline_hostgroup, active, max_writers, writer_is_also_reader, max_transactions_behind) VALUES (2, 4, 3, 1, 1, 3, 1, 50);
+
+INSERT INTO mysql_replication_hostgroups (writer_hostgroup,reader_hostgroup,comment) VALUES (1,2,'cluster1');
+
+
+
+
+//add the nodes in proxysql pool with this command and replace the ip
+---------------------------------------------------------------------------------------------
+INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (2, '192.168.102.63', 3306);
+INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (2, '192.168.102.64', 3306);
+INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (3, '192.168.102.63', 3306);
+INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (3, '192.168.102.64', 3306);
+LOAD MYSQL SERVERS TO RUNTIME;
+SAVE MYSQL SERVERS TO DISK;
+
+
+//to delete the above
+DELETE FROM mysql_servers WHERE hostgroup_id=2 AND hostname IN ('10.0.102.63','10.0.102.64');
+
+
+
+//to check the status of servers (do in proxysql)
+SELECT hostgroup_id, hostname, status FROM runtime_mysql_servers;
+ SELECT * FROM stats.stats_mysql_connection_pool\G
+
+SELECT @@hostname;
+
+
+//check on nodes
+select * from sys.gr_member_routing_candidate_status;
+
+
+//create mysqluser on nodes,
+---------------------------------------------------------------------------------------------
+CREATE USER 'wf_workflow'@'%' IDENTIFIED BY 'Climatic6-Rudder-Scarecrow';
+GRANT ALL PRIVILEGES on *.* to 'wf_workflow'@'%';
+FLUSH PRIVILEGES;
+EXIT;
+
+
+//create the users in proxysql 
+---------------------------------------------------------------------------------------------
+INSERT INTO mysql_users(username, password, default_hostgroup) VALUES ('wf_workflow', 'Climatic6-Rudder-Scarecrow', 2);
+INSERT INTO mysql_users(username, password, default_hostgroup) VALUES ('pm_mbl', 'Climatic6-Rudder-Scarecrow', 2);
+LOAD MYSQL USERS TO RUNTIME;
+SAVE MYSQL USERS TO DISK;
+
+INSERT INTO mysql_users(username, password, default_hostgroup) VALUES ('monitor', 'Freefall6-Fax-Litter', 2);
+
+
+INSERT INTO scheduler (active,interval_ms,filename,arg1,comment)
+VALUES (1,10000,'/usr/bin/proxysql_galera_checker','--config-file=/etc/proxysql-admin.cnf
+--write-hg=2 --read-hg=3 --writer-count=1 --mode=singlewrite
+--priority=192.168.102.63:3306,192.168.102.64:3306
+--log=/var/lib/proxysql/cluster_one_proxysql_galera_check.log','cluster_one');
+
+
+
+
+
+//Sometimes the proxysql can connect to mysql nodes and even can login to the cli, but cannot execute the queries and it returns Max connect timeout reached while reaching hostgroup 2 after 10000ms, in such case execute these queries:
+
+
+SAVE MYSQL SERVERS TO DISK;
+LOAD MYSQL SERVERS TO RUNTIME;
+
+SAVE MYSQL QUERY RULES TO DISK;
+LOAD MYSQL QUERY RULES TO RUNTIME;
+
+SAVE MYSQL USERS TO DISK;
+LOAD MYSQL USERS TO RUNTIME;
+
+LOAD ADMIN VARIABLES TO RUNTIME;
+SAVE ADMIN VARIABLES TO DISK;
+
+LOAD MYSQL VARIABLES TO RUNTIME;
+SAVE MYSQL VARIABLES TO DISK;
+
+If the issue still persists, check the result of select * from mysql_servers; and notice the hostgroup_id, if there is any unnecessary hostgroup mentioned for the specific node, it can also generate the above issue, For my case the hostgroup was set as offline_hostgroup and writer_hostgroup which is bad. Very Bad. If you have writer_is_also_reader:1, then your writer node can also be a reader, if not then you need to insert mysql_servers for both hostgroup of reader_hostgroup and writer_hostgroup
+
+
+
+
+
+SELECT * FROM stats.stats_mysql_connection_pool;
+
+
+
+select * from sys.gr_member_routing_candidate_status;
+
+
+SET GLOBAL wsrep_provider_options='pc.bootstrap=YES';
+
+
+

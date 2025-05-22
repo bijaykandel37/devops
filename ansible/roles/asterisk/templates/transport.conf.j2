@@ -1,0 +1,17 @@
+; This file is generated using Ansible. Please do not edit manually.
+; The ansible playbook to regenerate this file is located at: https://git.sabhriti.eu/infrastructure/rollout/asterisk/configure
+
+[transport-udp]
+type=transport
+protocol=udp
+bind={{pbx.transport.udp.bind}}
+
+[transport-ws]
+type=transport
+protocol=ws
+bind={{pbx.transport.ws.bind}}
+
+[transport-wss]
+type=transport
+protocol=wss
+bind={{pbx.transport.wss.bind}}

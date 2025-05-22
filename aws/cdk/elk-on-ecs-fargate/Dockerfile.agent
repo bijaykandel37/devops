@@ -1,0 +1,22 @@
+FROM docker.elastic.co/beats/elastic-agent:8.11.2
+
+#COPY ./elastic-agent.yml /usr/share/elastic-agent/elastic-agent.yml
+
+ENV FLEET_SERVER_ENABLE=true
+ENV FLEET_ENROLL=1
+ENV FLEET_URL=https://127.0.0.1:8220
+ENV FLEET_SERVER_ELASTICSEARCH_HOST=http://elasticsearch.dev.avid.health
+ENV FLEET_SERVER_ES=http://elasticsearch.dev.avid.health
+ENV FLEET_SERVER_POLICY="fleet-server-policy"
+ENV FLEET_SERVER_SERVICE_TOKEN=AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3MDU2NTY0MDY5NDg6cnVBM3o2ZjVTZmlSenoyU04xbEFWZw
+ENV FLEET_SERVER_ELASTICSEARCH_USERNAME=elastic
+ENV FLEET_SERVER_ELASTICSEARCH_PASSWORD=elasticpassword
+ENV ELASTICSEARCH_HOST=http://elasticsearch.dev.avid.health
+ENV ELASTICSEARCH_USERNAME=elastic
+ENV ELASTICSEARCH_PASSWORD=elasticpassword
+ENV KIBANA_FLEET_SETUP=1
+ENV KIBANA_HOST=http://kibana.dev.avid.health
+ENV KIBANA_USERNAME=another_user
+ENV KIBANA_PASSWORD=changeme1
+
+EXPOSE 8220

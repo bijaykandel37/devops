@@ -1,0 +1,158 @@
+---
+- name: Create base directories
+  ansible.builtin.file:
+    path: "{{asterisk.config.path}}/{{item}}"
+    state: directory
+    recurse: yes
+  with_items:
+    - pjsip
+    - extensions
+    - queues
+
+- name: Create pjsip directories
+  ansible.builtin.file:
+    path: "{{asterisk.config.path}}/pjsip/{{item.name}}"
+    state: directory
+    recurse: yes
+  with_items: "{{ providers }}"
+
+- name: Create directories for pami
+  ansible.builtin.file:
+    path: "{{asterisk.config.path}}/pjsip/pami"
+    state: directory
+    recurse: yes
+
+- name: Initialize files for pami (create only if not exists)
+  ansible.builtin.file:
+    path: "{{asterisk.config.path}}/pjsip/pami/pjsip.{{item}}.conf"
+    state: touch
+  with_items:
+    - aor
+    - auth
+    - endpoint
+
+- name: Register/Authenticate ami user.
+  ansible.builtin.template:
+    src: templates/manager.conf.j2
+    dest: "{{asterisk.config.path}}/manager.conf"
+
+# - name: Create transport configuration
+#   ansible.builtin.template:
+#     src: templates/transport.conf.j2
+#     dest: "{{asterisk.config.path}}/pjsip/transport.conf"
+
+- name: Create main pjsip configuration file
+  ansible.builtin.template:
+    src: templates/pjsip.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip.conf"
+  with_items: "{{ providers }}"
+
+- name: create queues
+  ansible.builtin.template:
+    src: templates/queues/provider_queues.conf.j2
+    dest: "{{asterisk.config.path}}/queues/{{item.name}}_queues.conf"
+  with_items: "{{ providers }}"
+
+- name: register queues
+  ansible.builtin.template:
+    src: templates/queues/queues.conf.j2
+    dest: "{{asterisk.config.path}}/queues.conf"
+  with_items: "{{ providers }}"
+
+- name: create extensions
+  ansible.builtin.template:
+    src: templates/extensions/provider_extensions.conf.j2
+    dest: "{{asterisk.config.path}}/extensions/{{item.name}}_extensions.conf"
+  with_items: "{{ providers }}"
+
+- name: register extensions
+  ansible.builtin.template:
+    src: templates/extensions/extensions.conf.j2
+    dest: "{{asterisk.config.path}}/extensions.conf"
+  with_items: "{{ providers }}"
+
+- name: create aor config files
+  ansible.builtin.template:
+    src: templates/pjsip/provider/pjsip.aor.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/{{item.name}}/pjsip.aor.conf"
+  with_items: "{{ providers }}"
+
+- name: include aor files
+  ansible.builtin.template:
+    src: templates/pjsip/aor.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/aor.conf"
+  with_items: "{{ providers }}"
+
+- name: create auth config files
+  ansible.builtin.template:
+    src: templates/pjsip/provider/pjsip.auth.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/{{item.name}}/pjsip.auth.conf"
+  with_items: "{{ providers }}"
+
+- name: include auth files
+  ansible.builtin.template:
+    src: templates/pjsip/auth.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/auth.conf"
+  with_items: "{{ providers }}"
+
+- name: create endpoint config files
+  ansible.builtin.template:
+    src: templates/pjsip/provider/pjsip.endpoint.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/{{item.name}}/pjsip.endpoint.conf"
+  with_items: "{{ providers }}"
+
+- name: include endpoint files
+  ansible.builtin.template:
+    src: templates/pjsip/endpoint.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/endpoint.conf"
+  with_items: "{{ providers }}"
+
+- name: create identify config files
+  ansible.builtin.template:
+    src: templates/pjsip/provider/pjsip.identify.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/{{item.name}}/pjsip.identify.conf"
+  with_items: "{{ providers }}"
+
+- name: include identify files
+  ansible.builtin.template:
+    src: templates/pjsip/identify.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/identify.conf"
+  with_items: "{{ providers }}"
+
+- name: create registration config files
+  ansible.builtin.template:
+    src: templates/pjsip/provider/pjsip.registration.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/{{item.name}}/pjsip.registration.conf"
+  with_items: "{{ providers }}"
+
+- name: include registration files
+  ansible.builtin.template:
+    src: templates/pjsip/registration.conf.j2
+    dest: "{{asterisk.config.path}}/pjsip/registration.conf"
+  with_items: "{{ providers }}"
+
+- name: Create http.conf file
+  template:
+    src: http.conf.j2
+    dest: "{{asterisk.config.path}}/http.conf"
+
+- name: Create cel.conf file
+  template:
+    src: cel.conf
+    dest: "{{asterisk.config.path}}/cel.conf"
+
+- name: Create cel_pgsql.conf file
+  template:
+    src: cel_pgsql.conf.j2
+    dest: "{{asterisk.config.path}}/cel_pgsql.conf"
+
+# - name: Restart Asterisk
+#   systemd:
+#     name: asterisk
+#     state: stopped
+
+- name: Reload Asterisk
+  systemd:
+    name: asterisk
+    state: reloaded
+    
